@@ -5,7 +5,6 @@ import (
 	"log"
 	"fmt"
 	"io/ioutil"
-	"github.com/gin-gonic/gin"
 	"encoding/json"
 )
 
@@ -29,9 +28,7 @@ func slurpFile(path string) []byte {
 	return data
 }
 
-type slurpFn func(string) []byte
-
-func watchFile(method slurpFn, path string) {
+func watchFile(path string, channel chan []byte) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -45,7 +42,7 @@ func watchFile(method slurpFn, path string) {
 			select {
 			case ev := <-watcher.Event:
 				fmt.Println("event:", ev)
-				method(path)
+				channel <- slurpFile(path)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
@@ -65,30 +62,61 @@ func watchFile(method slurpFn, path string) {
 }
 
 func main() {
-	go func() {
-		data := make(chan []byte)
-		watchFile(slurpFile, "/data/manfiest.json")
+	mfChan := make(chan []byte)
+
+	go func(){
+		watchFile("data/manfiest.json", mfChan)
 	}()
 
-	r := gin.Default()
+	type Rover struct {
+		Id          float64 `json: "id"`
+		Name        string  `json: "name"`
+		LandingDate string  `json: "landing_date"`
+		LaunchDate  string  `json: "launch_date"`
+		Status      string  `json: "status"`
+		MaxSol      float64 `json: "max_sol"`
+		MaxDate     string  `json: "max_date"`
+		TotalPhotos float64 `json: "total_photos"`
+		//Camera *Camera
+	}
 
-	r.GET("/manifest", func(c *gin.Context) {
-		type Rover struct {
-			Id          float64 `json: "id"`
-			Name        string  `json: "name"`
-			LandingDate string  `json: "landing_date"`
-			LaunchDate  string  `json: "launch_date"`
-			Status      string  `json: "status"`
-			MaxSol      float64 `json: "max_sol"`
-			MaxDate     string  `json: "max_date"`
-			TotalPhotos float64 `json: "total_photos"`
-			//Camera *Camera
-		}
+	type Manifest struct{
+		Rover1 *Rover
+		Rover2 *Rover
+		Rover3 *Rover
+	}
 
-		var rover Rover
+	type File struct{
+		Manifest []*Rover
+	}
 
-		json.Unmarshal(bs, &rover)
-	})
+	var manifest Manifest
+
+	for bs := range mfChan{
+		fmt.Println("something came off mfChan")
+		json.Unmarshal(bs, &manifest)
+		fmt.Println(manifest)
+	}
+
+	//r := gin.Default()
+	//
+	//r.GET("/manifest", func(c *gin.Context) {
+	//	type Rover struct {
+	//		Id          float64 `json: "id"`
+	//		Name        string  `json: "name"`
+	//		LandingDate string  `json: "landing_date"`
+	//		LaunchDate  string  `json: "launch_date"`
+	//		Status      string  `json: "status"`
+	//		MaxSol      float64 `json: "max_sol"`
+	//		MaxDate     string  `json: "max_date"`
+	//		TotalPhotos float64 `json: "total_photos"`
+	//		//Camera *Camera
+	//	}
+	//
+	//	var rover Rover
+	//
+	//	json.Unmarshal(<-mfChan, &rover)
+	//})
 
 	////r.GET("/:rover", func(c *gin.Context) {
 	////
