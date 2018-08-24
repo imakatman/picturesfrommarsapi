@@ -5,7 +5,8 @@ import (
 	"log"
 	"fmt"
 	"io/ioutil"
-	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // If release mode is to be set, it needs to be set when building the program
@@ -62,11 +63,13 @@ func watchFile(path string, channel chan []byte) {
 }
 
 func main() {
-	mfChan := make(chan []byte)
+	r := gin.Default()
 
-	go func(){
-		watchFile("data/manfiest.json", mfChan)
-	}()
+	//mfChan := make(chan []byte)
+	//
+	//go func() {
+	//	watchFile("data/manfiest.json", mfChan)
+	//}()
 
 	type Rover struct {
 		Id          float64 `json: "id"`
@@ -80,43 +83,26 @@ func main() {
 		//Camera *Camera
 	}
 
-	type Manifest struct{
-		Rover1 *Rover
-		Rover2 *Rover
-		Rover3 *Rover
-	}
-
-	type File struct{
-		Manifest []*Rover
+	type Manifest struct {
+		Data struct {
+			Rovers []Rover `json:"rovers"`
+		} `json:"data"`
 	}
 
 	var manifest Manifest
 
-	for bs := range mfChan{
-		fmt.Println("something came off mfChan")
-		json.Unmarshal(bs, &manifest)
-		fmt.Println(manifest)
-	}
+	//for bs := range mfChan {
+	//	fmt.Println("something came off mfChan")
+	//	json.Unmarshal(bs, &manifest)
+	//	fmt.Println(manifest)
+	//}
 
-	//r := gin.Default()
-	//
-	//r.GET("/manifest", func(c *gin.Context) {
-	//	type Rover struct {
-	//		Id          float64 `json: "id"`
-	//		Name        string  `json: "name"`
-	//		LandingDate string  `json: "landing_date"`
-	//		LaunchDate  string  `json: "launch_date"`
-	//		Status      string  `json: "status"`
-	//		MaxSol      float64 `json: "max_sol"`
-	//		MaxDate     string  `json: "max_date"`
-	//		TotalPhotos float64 `json: "total_photos"`
-	//		//Camera *Camera
-	//	}
-	//
-	//	var rover Rover
-	//
-	//	json.Unmarshal(<-mfChan, &rover)
-	//})
+	r.GET("/manifest", func(c *gin.Context) {
+		fmt.Println("get request for manifest")
+		c.JSON(http.StatusOK, manifest)
+	})
+
+	r.Run(":8080")
 
 	////r.GET("/:rover", func(c *gin.Context) {
 	////
@@ -127,5 +113,4 @@ func main() {
 	////
 	////})
 	//
-	//r.Run(":8080")
 }
