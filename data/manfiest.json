@@ -4,7 +4,7 @@
       {
         "_id": "5b346d3fb29ff17618efa1d2",
         "id": 5,
-        "name": "Curiosity",
+        "name": "Curiosiy",
         "landing_date": "2012-08-06",
         "launch_date": "2011-11-26",
         "status": "active",
@@ -13,7 +13,7 @@
         "total_photos": 340312,
         "cameras": [
           {
-            "name": "FHA",
+            "name": "FHAZ",
             "full_name": "Front Hazard Avoidance Camera"
           },
           {
