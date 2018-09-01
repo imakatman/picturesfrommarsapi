@@ -19,6 +19,11 @@ import (
 	"encoding/json"
 )
 
+type Config struct {
+	url   string
+	token []string
+}
+
 type Rover struct {
 	Id          float64 `json: "id"`
 	Name        string  `json: "name"`
@@ -37,14 +42,18 @@ type Manifest struct {
 	} `json:"data"`
 }
 
-var manifest Manifest
+var manifest *Manifest
+var curiosity *Rover
+var opportunity *Rover
+var spirit *Rover
 
 func main() {
 	r := gin.Default()
 
-	go func() {
-		watchFile("data/manfiest.json")
-	}()
+	WatchFile("data/manfiest.json", &manifest)
+	WatchFile("data/curiosityDates.json", &curiosity)
+	WatchFile("data/opportunityDates.json", &opportunity)
+	WatchFile("data/spiritDates.json", &spirit)
 
 	r.GET("/manifest", func(c *gin.Context) {
 		fmt.Println("get request for manifest")
@@ -54,19 +63,22 @@ func main() {
 
 	r.Run(":8080")
 
-	////r.GET("/:rover", func(c *gin.Context) {
-	////
-	////})
-	////
-	////r.GET("/:date", func(c *gin.Context) {
-	////	date := c.Param("date")
-	////
-	////})
-	//
+	r.GET("/rover/:rover", func(c *gin.Context) {
+		updateData := c.Query("update")
+
+		if updateData == "" {
+			ReturnRoverData(c)
+		} else {
+			roverParam := c.Param("rover")
+
+			manifestReader := GetLatestManifest(c)
+			//GetLatestRoverData(roverParam)
+		}
+	})
 }
 
-func watchFile(path string) {
-	watcher, err := fsnotify.NewWatcher()
+func WatchFile(path string, data interface{}) {
+	watcher, err := fsnotify.NewWatcher(
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +91,7 @@ func watchFile(path string) {
 			select {
 			case ev := <-watcher.Event:
 				fmt.Println("event:", ev)
-				json.Unmarshal(slurpFile(path), &manifest)
+				json.Unmarshal(SlurpFile("data/manfiest.json"), data)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
@@ -98,10 +110,57 @@ func watchFile(path string) {
 	watcher.Close()
 }
 
-func slurpFile(path string) []byte {
+func SlurpFile(path string) []byte {
 	data, err := ioutil.ReadFile(path)
 	check(err)
 	return data
+}
+
+func ReturnRoverData(c *gin.Context) {
+	roverParam := c.Param("rover")
+
+	switch roverParam {
+	case "curiosity":
+		c.JSON(http.StatusOK, &curiosity)
+	case "opportunity":
+		c.JSON(http.StatusOK, &opportunity)
+	case "spirit":
+		c.JSON(http.StatusOK, &spirit)
+	default:
+		log.Println("Rover parameter provided was not of an expected kind: ", roverParam)
+	}
+}
+
+func GetLatestManifest(c *gin.Context) interface{}{
+	apiConfig := Config{
+		url: "https://api.nasa.gov/mars-photos/api/v1/rovers",
+		token: []string{
+			"8m8bkcVYqxE5j0vQL2wk1bpiBGibgaqCrOvwZVyU",
+			"a4q0jhngYKp9kn0cuwvKMHtKz7IrkKtFBRaiMv5t",
+			"ef0eRn0aLh0Byb8q7wCniHbiqcjfDWITSIJVh9xy",
+		},
+	}
+
+	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token)
+	response, err := http.Get(apiUrl)
+	if err != nil || response.StatusCode != http.StatusOK {
+		c.Status(http.StatusServiceUnavailable)
+		return
+	}
+
+	reader := response.Body
+	contentLength := response.ContentLength
+	contentType := response.Header.Get("Content-Type")
+
+	extraHeaders := map[string]string{
+		"Content-Disposition": `attachment; filename="gopher.png"`,
+	}
+
+	return reader
+}
+
+func WriteToFile(){
+
 }
 
 func check(e error) {
