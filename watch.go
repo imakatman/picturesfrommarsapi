@@ -8,7 +8,12 @@ import (
 	"io/ioutil"
 )
 
-func WatchFile(path string, data interface{}) {
+func InitAndWatch(path string, obj interface{}){
+	json.Unmarshal(slurpFile(path), obj)
+	watchFile(path, obj)
+}
+
+func watchFile(path string, obj interface{}) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -22,7 +27,7 @@ func WatchFile(path string, data interface{}) {
 			select {
 			case ev := <-watcher.Event:
 				fmt.Println("event:", ev)
-				json.Unmarshal(SlurpFile("data/manfiest.json"), data)
+				json.Unmarshal(slurpFile("data/manfiest.json"), obj)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
@@ -41,7 +46,7 @@ func WatchFile(path string, data interface{}) {
 	watcher.Close()
 }
 
-func SlurpFile(path string) []byte {
+func slurpFile(path string) []byte {
 	data, err := ioutil.ReadFile(path)
 	Check(err)
 	return data

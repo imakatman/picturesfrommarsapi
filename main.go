@@ -13,13 +13,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"encoding/json"
 	"log"
 )
-
-type Config struct {
-	url   string
-	token []string
-}
 
 var manifest *Manifest
 var curiosity *Rover
@@ -29,10 +25,12 @@ var spirit *Rover
 func main() {
 	r := gin.Default()
 
-	WatchFile("data/manfiest.json", &manifest)
-	WatchFile("data/curiosityDates.json", &curiosity)
-	WatchFile("data/opportunityDates.json", &opportunity)
-	WatchFile("data/spiritDates.json", &spirit)
+	go func() {
+		InitAndWatch("data/manfiest.json", &manifest)
+		InitAndWatch("data/curiosityDates.json", &curiosity)
+		InitAndWatch("data/opportunityDates.json", &opportunity)
+		InitAndWatch("data/spiritDates.json", &spirit)
+	}()
 
 	r.GET("/manifest", func(c *gin.Context) {
 		fmt.Println("get request for manifest")
@@ -40,26 +38,24 @@ func main() {
 		c.JSON(http.StatusOK, manifest)
 	})
 
-	r.Run(":8080")
-
 	r.GET("/rover/:rover", func(c *gin.Context) {
 		updateData := c.Query("update")
 
 		if updateData == "" {
 			returnRoverData(c)
 		} else {
-			roverParam := c.Param("rover")
-
-			manifestReader := GetLatestManifest(c)
+			reader := ReturnLatestManifestReader(c)
+			json.NewDecoder(reader).Decode(&manifest)
+			fmt.Sprintln(manifest)
 			//GetLatestRoverData(roverParam)
 		}
 	})
+
+	r.Run(":8080")
 }
 
 func returnRoverData(c *gin.Context) {
-	roverParam := c.Param("rover")
-
-	switch roverParam {
+	switch c.Param("rover") {
 	case "curiosity":
 		c.JSON(http.StatusOK, &curiosity)
 	case "opportunity":
@@ -67,6 +63,6 @@ func returnRoverData(c *gin.Context) {
 	case "spirit":
 		c.JSON(http.StatusOK, &spirit)
 	default:
-		log.Println("Rover parameter provided was not of an expected kind: ", roverParam)
+		log.Println("Rover parameter provided was not of an expected kind: ", c.Param("rover"))
 	}
 }
