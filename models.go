@@ -18,7 +18,5 @@ type Rover struct {
 }
 
 type Manifest struct {
-	Data struct {
-		Rovers []Rover `json:"rovers"`
-	} `json:"data"`
+	Rovers []Rover `json:"rovers"`
 }

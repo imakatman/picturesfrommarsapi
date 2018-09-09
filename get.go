@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"fmt"
 	"net/http"
-	"io"
+	"io/ioutil"
 )
 
 var apiConfig = Config{
@@ -16,17 +16,32 @@ var apiConfig = Config{
 	},
 }
 
-func ReturnLatestManifestReader(c *gin.Context) io.Reader {
-	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token)
-
+func ReturnLatestManifest(c *gin.Context) []byte {
+	// @TODO: Write a function that returns a different token if the one in use is invalid
+	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token[0])
 	response, err := http.Get(apiUrl)
 	if err != nil || response.StatusCode != http.StatusOK {
 		c.Status(http.StatusServiceUnavailable)
+		fmt.Println(err)
 	}
 
-	return response.Body
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil{
+		fmt.Println(err)
+	}
+
+	fmt.Println(string(bodyBytes))
+
+	return bodyBytes
 }
 
-func WriteToFile() {
-
-}
+//func ReturnLatestRoverReader(c *gin.Context) io.Reader {
+//	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token)
+//
+//	response, err := http.Get(apiUrl)
+//	if err != nil || response.StatusCode != http.StatusOK {
+//		c.Status(http.StatusServiceUnavailable)
+//	}
+//
+//	return response.Body
+//}

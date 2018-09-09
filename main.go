@@ -21,6 +21,7 @@ var manifest *Manifest
 var curiosity *Rover
 var opportunity *Rover
 var spirit *Rover
+var emptyRover *Rover
 
 func main() {
 	r := gin.Default()
@@ -42,27 +43,35 @@ func main() {
 		updateData := c.Query("update")
 
 		if updateData == "" {
-			returnRoverData(c)
-		} else {
-			reader := ReturnLatestManifestReader(c)
-			json.NewDecoder(reader).Decode(&manifest)
-			fmt.Sprintln(manifest)
-			//GetLatestRoverData(roverParam)
+			data := returnRoverData(c)
+			c.JSON(http.StatusOK, &data)
+		} else if updateData == "true" {
+			file := fmt.Sprintf("data/manifest.json")
+			bytes := ReturnLatestManifest(c)
+
+			WriteToFile(file, bytes)
+			json.Unmarshal(SlurpFile(file), &manifest)
+			data := returnRoverData(c)
+			c.JSON(http.StatusOK, gin.H{
+				"manifest": manifest,
+				"rover": data,
+			})
 		}
 	})
 
 	r.Run(":8080")
 }
 
-func returnRoverData(c *gin.Context) {
+func returnRoverData(c *gin.Context) *Rover {
 	switch c.Param("rover") {
 	case "curiosity":
-		c.JSON(http.StatusOK, &curiosity)
+		return curiosity
 	case "opportunity":
-		c.JSON(http.StatusOK, &opportunity)
+		return opportunity
 	case "spirit":
-		c.JSON(http.StatusOK, &spirit)
+		return spirit
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", c.Param("rover"))
+		return emptyRover
 	}
 }
