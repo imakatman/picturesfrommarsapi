@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"encoding/json"
 	"log"
 )
 
@@ -23,11 +22,13 @@ var opportunity *Rover
 var spirit *Rover
 var emptyRover *Rover
 
+var FileChange chan bool
+
 func main() {
 	r := gin.Default()
 
 	go func() {
-		InitAndWatch("data/manfiest.json", &manifest)
+		InitAndWatch("data/manifest.json", &manifest)
 		InitAndWatch("data/curiosityDates.json", &curiosity)
 		InitAndWatch("data/opportunityDates.json", &opportunity)
 		InitAndWatch("data/spiritDates.json", &spirit)
@@ -43,17 +44,22 @@ func main() {
 		updateData := c.Query("update")
 
 		if updateData == "" {
-			data := returnRoverData(c)
+			data := returnRoverData(c.Param("rover"))
 			c.JSON(http.StatusOK, &data)
 		} else if updateData == "true" {
-			file := fmt.Sprintf("data/manifest.json")
-			bytes := ReturnLatestManifest(c)
-
-			WriteToFile(file, bytes)
-			json.Unmarshal(SlurpFile(file), &manifest)
-			data := returnRoverData(c)
+			// Update Manifest
+			manifestFile := fmt.Sprintf("data/manifest.json")
+			manifestBytes := ReturnLatestManifest(c)
+			WriteFile(manifestFile, manifestBytes)
+			data := returnRoverData(c.Param("rover"))
+			for n := range FileChange{
+				fmt.Println(n)
+				if n == true {
+					fmt.Println("n is true")
+				}
+			}
 			c.JSON(http.StatusOK, gin.H{
-				"manifest": manifest,
+				"manifest": string(SlurpFile(manifestFile)),
 				"rover": data,
 			})
 		}
@@ -62,8 +68,8 @@ func main() {
 	r.Run(":8080")
 }
 
-func returnRoverData(c *gin.Context) *Rover {
-	switch c.Param("rover") {
+func returnRoverData(rover string) *Rover {
+	switch rover {
 	case "curiosity":
 		return curiosity
 	case "opportunity":
@@ -71,7 +77,7 @@ func returnRoverData(c *gin.Context) *Rover {
 	case "spirit":
 		return spirit
 	default:
-		log.Println("Rover parameter provided was not of an expected kind: ", c.Param("rover"))
+		log.Println("Rover parameter provided was not of an expected kind: ", rover)
 		return emptyRover
 	}
 }

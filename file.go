@@ -14,6 +14,9 @@ func InitAndWatch(path string, obj interface{}){
 }
 
 func watchFile(path string, obj interface{}) {
+	fmt.Println("watchFile")
+	bytesFromFile := SlurpFile(path)
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -26,8 +29,12 @@ func watchFile(path string, obj interface{}) {
 		for {
 			select {
 			case ev := <-watcher.Event:
+				fmt.Println("watcher event", ev)
 				fmt.Println("event:", ev)
-				json.Unmarshal(SlurpFile(path), obj)
+				json.Unmarshal(bytesFromFile, obj)
+				fmt.Println("FileChange <- true")
+				FileChange <- true
+				//fmt.Sprintf("FileChange is %v", FileChange)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
@@ -52,7 +59,7 @@ func SlurpFile(path string) []byte {
 	return data
 }
 
-func WriteToFile(file string, data []byte){
+func WriteFile(file string, data []byte){
 	err := ioutil.WriteFile(file, data, 0644)
 	Check(err)
 }
