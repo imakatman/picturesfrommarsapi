@@ -27,7 +27,7 @@ func watchFile(path string, obj interface{}) {
 			select {
 			case ev := <-watcher.Event:
 				fmt.Println("event:", ev)
-				json.Unmarshal(SlurpFile("data/manfiest.json"), obj)
+				json.Unmarshal(SlurpFile(path), obj)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
