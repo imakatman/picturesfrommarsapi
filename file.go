@@ -34,6 +34,7 @@ func watchFile(path string, obj interface{}) {
 				json.Unmarshal(bytesFromFile, obj)
 				fmt.Println("FileChange <- true")
 				FileChange <- true
+				close(FileChange)
 				//fmt.Sprintf("FileChange is %v", FileChange)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)

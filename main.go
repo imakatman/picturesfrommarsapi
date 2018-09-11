@@ -1,11 +1,5 @@
-// 8-24-2018
-// Problem at the moment is that the file change event that is
-// triggered when the json file itself is modified is RENAME.
-//
-// This in particular isn't the issue, the method of streaming the
-// new data from the NASA API is going to dictate which file change
-// events occur. And the method of choice will have to depend on
-// which method is the most performant and cost-effective for the server.
+// 09-10-2018
+// @TODO: Make API calls to NASA server and save individual rover information in files
 
 package main
 
@@ -14,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"log"
+	"encoding/json"
 )
 
 var manifest *Manifest
@@ -27,9 +22,11 @@ var FileChange chan bool
 func main() {
 	r := gin.Default()
 
+	FileChange = make(chan bool, 1)
+
 	go func() {
 		InitAndWatch("data/manifest.json", &manifest)
-		InitAndWatch("data/curiosityDates.json", &curiosity)
+		InitAndWatch("data/curiosity.json", &curiosity)
 		InitAndWatch("data/opportunityDates.json", &opportunity)
 		InitAndWatch("data/spiritDates.json", &spirit)
 	}()
@@ -41,28 +38,41 @@ func main() {
 	})
 
 	r.GET("/rover/:rover", func(c *gin.Context) {
+		var roverData string
+		var manifestData string
+		manifestFile := fmt.Sprintf("data/manifest.json")
 		updateData := c.Query("update")
+		roverParam := c.Param("rover")
 
 		if updateData == "" {
-			data := returnRoverData(c.Param("rover"))
-			c.JSON(http.StatusOK, &data)
+			fmt.Println("updateData is empty string")
+			manifestData = string(SlurpFile(manifestFile))
+			roverStruct := returnRoverData(roverParam)
+			bytes, err := json.Marshal(&roverStruct)
+			Check(err)
+			roverData = string(bytes)
+			fmt.Println(roverData)
 		} else if updateData == "true" {
+			fmt.Println("updateData == true")
 			// Update Manifest
-			manifestFile := fmt.Sprintf("data/manifest.json")
 			manifestBytes := ReturnLatestManifest(c)
 			WriteFile(manifestFile, manifestBytes)
-			data := returnRoverData(c.Param("rover"))
 			for n := range FileChange{
 				fmt.Println(n)
 				if n == true {
-					fmt.Println("n is true")
+					roverStruct := returnRoverData(roverParam)
+					bytes, err := json.Marshal(roverStruct)
+					Check(err)
+					roverData = string(bytes)
 				}
 			}
-			c.JSON(http.StatusOK, gin.H{
-				"manifest": string(SlurpFile(manifestFile)),
-				"rover": data,
-			})
 		}
+
+		fmt.Println("out of condition")
+		c.JSON(http.StatusOK, gin.H{
+			"manifest": &manifestData,
+			"rover": &roverData,
+		})
 	})
 
 	r.Run(":8080")
