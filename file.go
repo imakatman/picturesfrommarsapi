@@ -10,14 +10,33 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"errors"
 )
+
+type fileError struct {
+	file string
+	rec string
+	err  error
+}
+
+func (e *fileError) Error() string {
+	return fmt.Sprintf(
+		"a file error occured for %s reccomendation is: %s",
+		e.file,
+		e.rec,
+	)
+}
 
 func InitAndWatch(path string, obj interface{}) {
 	bytes, err := SlurpFile(path)
-	if err != nil {
-		InitAndWatch(path, obj)
-		return
+
+	if err != nil{
+		if err.rec == "tryAgain" {
+			InitAndWatch(path, obj)
+			return
+		} else if err.rec == "emptyFile" {
+			// make api call and create file
+			return
+		}
 	}
 
 	json.Unmarshal(bytes, obj)
@@ -70,15 +89,17 @@ First make sure the file is not empty.
 */
 func SlurpFile(path string) ([]byte, error) {
 	fi, err := os.Stat(path)
+	// Could not obtain stat, handle error
 	if err != nil {
-		msg := fmt.Sprintf("Could not obtain stat from %s", path)
-		// Could not obtain stat, handle error
-		panic(msg)
-		return nil, errors.New(msg)
+		msg := fmt.Errorf("could not obtain stat from %s", path)
+		fErr := fileError{ path, "tryAgain", msg}
+		return nil, &fErr
 	}
 
-	if fi.Size() == 0{
-
+	if fi.Size() == 0 {
+		msg := fmt.Errorf("%s is empty", path)
+		fErr := fileError{ path, "emptyFile", msg}
+		return nil, &fErr
 	}
 
 	data, err := ioutil.ReadFile(path)
