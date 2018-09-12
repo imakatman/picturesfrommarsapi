@@ -1,5 +1,5 @@
 // 09-10-2018
-// @TODO: Make API calls to NASA server and save individual rover information in files
+// @TODO #2: Make API calls to NASA server and save individual rover information in files
 
 package main
 
@@ -27,8 +27,8 @@ func main() {
 	go func() {
 		InitAndWatch("data/manifest.json", &manifest)
 		InitAndWatch("data/curiosity.json", &curiosity)
-		InitAndWatch("data/opportunityDates.json", &opportunity)
-		InitAndWatch("data/spiritDates.json", &spirit)
+		InitAndWatch("data/opportunity.json", &opportunity)
+		InitAndWatch("data/spirit.json", &spirit)
 	}()
 
 	r.GET("/manifest", func(c *gin.Context) {

@@ -37,7 +37,7 @@ func ReturnLatestManifest(c *gin.Context) []byte {
 
 func ReturnLatestRoverData(c *gin.Context) []byte {
 	// @TODO: Write a function that returns a different token if the one in use is invalid
-	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token[0])
+	apiUrl := fmt.Sprintf("%s/%s/photos?sol=%d?api_key=%s", apiConfig.url, apiConfig.token[0])
 	response, err := http.Get(apiUrl)
 	if err != nil || response.StatusCode != http.StatusOK {
 		c.Status(http.StatusServiceUnavailable)
