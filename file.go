@@ -12,30 +12,26 @@ import (
 	"os"
 )
 
-type fileError struct {
+type emptyFileErr struct {
 	file string
-	rec string
 	err  error
 }
 
-func (e *fileError) Error() string {
-	return fmt.Sprintf(
-		"a file error occured for %s reccomendation is: %s",
-		e.file,
-		e.rec,
-	)
+func (e *emptyFileErr) Error() string {
+	return fmt.Sprintf("%s is empty", e.file)
 }
 
 func InitAndWatch(path string, obj interface{}) {
 	bytes, err := SlurpFile(path)
 
 	if err != nil{
-		if err.rec == "tryAgain" {
-			InitAndWatch(path, obj)
-			return
-		} else if err.rec == "emptyFile" {
+		switch err.(type) {
+		case *emptyFileErr:
+			fmt.Println("api call should be made")
 			// make api call and create file
-			return
+		default:
+			// default behavior should be to try and run this function again
+			InitAndWatch(path, obj)
 		}
 	}
 
@@ -91,14 +87,12 @@ func SlurpFile(path string) ([]byte, error) {
 	fi, err := os.Stat(path)
 	// Could not obtain stat, handle error
 	if err != nil {
-		msg := fmt.Errorf("could not obtain stat from %s", path)
-		fErr := fileError{ path, "tryAgain", msg}
-		return nil, &fErr
+		return nil, fmt.Errorf("could not obtain stat from %s", path)
 	}
 
 	if fi.Size() == 0 {
 		msg := fmt.Errorf("%s is empty", path)
-		fErr := fileError{ path, "emptyFile", msg}
+		fErr := emptyFileErr{ path, msg}
 		return nil, &fErr
 	}
 

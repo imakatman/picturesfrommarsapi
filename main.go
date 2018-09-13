@@ -1,5 +1,6 @@
 // 09-10-2018
 // @TODO #2: Make API calls to NASA server and save individual rover information in files
+// @TODO #3: Create interface for manifest and rover?
 
 package main
 
@@ -46,7 +47,7 @@ func main() {
 
 		if updateData == "" {
 			fmt.Println("updateData is empty string")
-			manifestData = string(SlurpFile(manifestFile))
+			manifestData, err = SlurpFile(manifestFile)
 			roverStruct := returnRoverData(roverParam)
 			bytes, err := json.Marshal(&roverStruct)
 			Check(err)
