@@ -13,24 +13,57 @@ import (
 )
 
 var manifest *Manifest
-var curiosity *Rover
-var opportunity *Rover
-var spirit *Rover
+var Curiosity *Rover
+var Opportunity *Rover
+var Spirit *Rover
 var emptyRover *Rover
 
 var FileChange chan bool
 
+//func init() {
+//	type dataPair struct {
+//		file string
+//		obj  interface{}
+//	}
+//
+//	dataPairs := []dataPair{
+//		{"data/manifest.json", &manifest},
+//		{"data/curiosity.json", &Curiosity},
+//		{"data/opportunity.json", &Opportunity},
+//		{"data/spirit.json", &Spirit},
+//	}
+//
+//	for n := range dataPairs {
+//		fmt.Printf("%T", n)
+//		//go func() {
+//		//	InitAndWatch(n.file, n.obj)
+//		//}()
+//	}
+//}
+
 func main() {
 	r := gin.Default()
 
-	FileChange = make(chan bool, 1)
+	FileChange = make(chan bool)
 
-	go func() {
-		InitAndWatch("data/manifest.json", &manifest)
-		InitAndWatch("data/curiosity.json", &curiosity)
-		InitAndWatch("data/opportunity.json", &opportunity)
-		InitAndWatch("data/spirit.json", &spirit)
-	}()
+	type dataPair struct {
+		file string
+		obj  interface{}
+	}
+
+	dataPairs := []dataPair{
+		{"data/manifest.json", &manifest},
+		{"data/curiosity.json", &Curiosity},
+		{"data/opportunity.json", &Opportunity},
+		{"data/spirit.json", &Spirit},
+	}
+
+	for n := range dataPairs {
+		fmt.Printf("%T", n)
+		//go func() {
+		//	InitAndWatch(n.file, n.obj)
+		//}()
+	}
 
 	r.GET("/manifest", func(c *gin.Context) {
 		fmt.Println("get request for manifest")
@@ -41,27 +74,32 @@ func main() {
 	r.GET("/rover/:rover", func(c *gin.Context) {
 		var roverData string
 		var manifestData string
-		manifestFile := fmt.Sprintf("data/manifest.json")
 		updateData := c.Query("update")
 		roverParam := c.Param("rover")
 
 		if updateData == "" {
 			fmt.Println("updateData is empty string")
-			manifestData, err = SlurpFile(manifestFile)
-			roverStruct := returnRoverData(roverParam)
+			unchangedManifestData, err := SlurpFile("data/manifest.json")
+			manifestData = string(unchangedManifestData)
+			roverStruct := ReturnRoverData(roverParam)
 			bytes, err := json.Marshal(&roverStruct)
 			Check(err)
 			roverData = string(bytes)
 			fmt.Println(roverData)
 		} else if updateData == "true" {
 			fmt.Println("updateData == true")
+			roverFile := fmt.Sprintf("data/%s.json", roverParam)
 			// Update Manifest
 			manifestBytes := ReturnLatestManifest(c)
-			WriteFile(manifestFile, manifestBytes)
-			for n := range FileChange{
-				fmt.Println(n)
-				if n == true {
-					roverStruct := returnRoverData(roverParam)
+			WriteFile("data/manifest.json", manifestBytes)
+			status := <-FileChange
+			if status == true {
+				roverBytes := ReturnLatestRoverData(c)
+				WriteFile(roverFile, roverBytes)
+				FileChange <- true
+				if status == true {
+					roverStruct := ReturnRoverData(roverParam)
+					fmt.Println(roverStruct.MaxDate)
 					bytes, err := json.Marshal(roverStruct)
 					Check(err)
 					roverData = string(bytes)
@@ -69,24 +107,26 @@ func main() {
 			}
 		}
 
+		close(FileChange)
+
 		fmt.Println("out of condition")
 		c.JSON(http.StatusOK, gin.H{
 			"manifest": &manifestData,
-			"rover": &roverData,
+			"rover":    &roverData,
 		})
 	})
 
 	r.Run(":8080")
 }
 
-func returnRoverData(rover string) *Rover {
+func ReturnRoverData(rover string) *Rover {
 	switch rover {
 	case "curiosity":
-		return curiosity
+		return Curiosity
 	case "opportunity":
-		return opportunity
+		return Opportunity
 	case "spirit":
-		return spirit
+		return Spirit
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
 		return emptyRover

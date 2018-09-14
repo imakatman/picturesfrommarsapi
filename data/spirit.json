@@ -1,0 +1,21 @@
+{
+  "id": 7,
+  "name": "Spirit",
+  "dates": [
+    {
+      "2010-03-21": {
+        "img": {
+          "img_src": "http://mars.nasa.gov/mer/gallery/all/2/p/2208/2P322473707ESFB27MP2600L8M1-BR.JPG",
+          "id": 318477
+        },
+        "earth_date": "2010-03-21",
+        "camera": {
+          "id": 30,
+          "name": "PANCAM",
+          "rover_id": 7,
+          "full_name": "Panoramic Camera"
+        }
+      }
+    }
+  ]
+}

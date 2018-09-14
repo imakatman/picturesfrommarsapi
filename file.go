@@ -22,7 +22,11 @@ func (e *emptyFileErr) Error() string {
 }
 
 func InitAndWatch(path string, obj interface{}) {
+	fmt.Println("InitAndWatch")
+
 	bytes, err := SlurpFile(path)
+
+	fmt.Println(string(bytes))
 
 	if err != nil{
 		switch err.(type) {
@@ -60,7 +64,6 @@ func watchFile(path string, obj interface{}) {
 				json.Unmarshal(bytesFromFile, obj)
 				fmt.Println("FileChange <- true")
 				FileChange <- true
-				close(FileChange)
 				//fmt.Sprintf("FileChange is %v", FileChange)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
