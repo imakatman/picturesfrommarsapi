@@ -42,9 +42,9 @@ func ReturnLatestRoverData(c *gin.Context) []byte {
 	fmt.Println(roverStruct)
 	apiUrl := fmt.Sprintf(
 		"%s/%s/photos?sol=%d&api_key=%s",
+		apiConfig.url,
 		roverParam,
 		roverStruct.MaxDate,
-		apiConfig.url,
 		apiConfig.token[0],
 	)
 	response, err := http.Get(apiUrl)

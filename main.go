@@ -20,31 +20,8 @@ var emptyRover *Rover
 
 var FileChange chan bool
 
-//func init() {
-//	type dataPair struct {
-//		file string
-//		obj  interface{}
-//	}
-//
-//	dataPairs := []dataPair{
-//		{"data/manifest.json", &manifest},
-//		{"data/curiosity.json", &Curiosity},
-//		{"data/opportunity.json", &Opportunity},
-//		{"data/spirit.json", &Spirit},
-//	}
-//
-//	for n := range dataPairs {
-//		fmt.Printf("%T", n)
-//		//go func() {
-//		//	InitAndWatch(n.file, n.obj)
-//		//}()
-//	}
-//}
-
-func main() {
-	r := gin.Default()
-
-	FileChange = make(chan bool)
+func init() {
+	launched := make(chan bool)
 
 	type dataPair struct {
 		file string
@@ -58,12 +35,26 @@ func main() {
 		{"data/spirit.json", &Spirit},
 	}
 
-	for n := range dataPairs {
-		fmt.Printf("%T", n)
-		//go func() {
-		//	InitAndWatch(n.file, n.obj)
-		//}()
+	for i, v := range dataPairs {
+		if i == 0{
+			go func() {
+				fmt.Println(v.file, i)
+				InitAndWatch(v.file, v.obj, launched)
+			}()
+		}
+		if <-launched == true {
+			go func() {
+				fmt.Println(v.file, i)
+				InitAndWatch(v.file, v.obj, launched)
+			}()
+		}
 	}
+}
+
+func main() {
+	r := gin.Default()
+
+	FileChange = make(chan bool)
 
 	r.GET("/manifest", func(c *gin.Context) {
 		fmt.Println("get request for manifest")

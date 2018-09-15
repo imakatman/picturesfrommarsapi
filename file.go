@@ -21,8 +21,8 @@ func (e *emptyFileErr) Error() string {
 	return fmt.Sprintf("%s is empty", e.file)
 }
 
-func InitAndWatch(path string, obj interface{}) {
-	fmt.Println("InitAndWatch")
+func InitAndWatch(path string, obj interface{}, c chan bool) {
+	fmt.Println("InitAndWatch", path)
 
 	bytes, err := SlurpFile(path)
 
@@ -35,11 +35,12 @@ func InitAndWatch(path string, obj interface{}) {
 			// make api call and create file
 		default:
 			// default behavior should be to try and run this function again
-			InitAndWatch(path, obj)
+			InitAndWatch(path, obj, c)
 		}
 	}
 
 	json.Unmarshal(bytes, obj)
+	c <- true
 	watchFile(path, obj)
 }
 
@@ -105,6 +106,7 @@ func SlurpFile(path string) ([]byte, error) {
 }
 
 func WriteFile(file string, data []byte) {
+	fmt.Println("WriteFile")
 	err := ioutil.WriteFile(file, data, 0644)
 	Check(err)
 }
