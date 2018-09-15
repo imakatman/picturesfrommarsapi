@@ -26,7 +26,7 @@ func ReturnLatestManifest(c *gin.Context) []byte {
 	}
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 
@@ -37,16 +37,18 @@ func ReturnLatestManifest(c *gin.Context) []byte {
 
 func ReturnLatestRoverData(c *gin.Context) []byte {
 	roverParam := c.Param("rover")
-	roverStruct := ReturnRoverData(roverParam)
+	roverStruct := *ReturnRoverData(roverParam)
 
 	fmt.Println(roverStruct)
 	apiUrl := fmt.Sprintf(
-		"%s/%s/photos?sol=%d&api_key=%s",
+		"%s/%s/photos?api_key=%s&earth_date=%s",
 		apiConfig.url,
 		roverParam,
-		roverStruct.MaxDate,
 		apiConfig.token[0],
+		roverStruct.MaxDate,
 	)
+
+	fmt.Println("apiUrl", apiUrl)
 	response, err := http.Get(apiUrl)
 	if err != nil || response.StatusCode != http.StatusOK {
 		c.Status(http.StatusServiceUnavailable)
@@ -54,7 +56,7 @@ func ReturnLatestRoverData(c *gin.Context) []byte {
 	}
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 

@@ -1,5 +1,4 @@
 // 09-10-2018
-// @TODO #2: Make API calls to NASA server and save individual rover information in files
 // @TODO #3: Create interface for manifest and rover?
 
 package main
@@ -12,11 +11,11 @@ import (
 	"encoding/json"
 )
 
-var manifest *Manifest
-var Curiosity *Rover
-var Opportunity *Rover
-var Spirit *Rover
-var emptyRover *Rover
+var manifest Manifest
+var Curiosity Rover
+var Opportunity Rover
+var Spirit Rover
+var emptyRover Rover
 
 var FileChange chan bool
 
@@ -36,16 +35,19 @@ func init() {
 	}
 
 	for i, v := range dataPairs {
-		if i == 0{
+		if i == 0 {
 			go func() {
+				fmt.Println("if i == 0")
 				fmt.Println(v.file, i)
-				InitAndWatch(v.file, v.obj, launched)
+				InitAndWatch(v.file, &v.obj, launched)
 			}()
 		}
+
 		if <-launched == true {
 			go func() {
+				fmt.Println("if <-launched == true")
 				fmt.Println(v.file, i)
-				InitAndWatch(v.file, v.obj, launched)
+				InitAndWatch(v.file, &v.obj, launched)
 			}()
 		}
 	}
@@ -63,20 +65,17 @@ func main() {
 	})
 
 	r.GET("/rover/:rover", func(c *gin.Context) {
-		var roverData string
-		var manifestData string
+		var roverData *Rover
+		var manifestData *Manifest
 		updateData := c.Query("update")
 		roverParam := c.Param("rover")
 
 		if updateData == "" {
 			fmt.Println("updateData is empty string")
-			unchangedManifestData, err := SlurpFile("data/manifest.json")
-			manifestData = string(unchangedManifestData)
+			manifestData = &manifest
 			roverStruct := ReturnRoverData(roverParam)
-			bytes, err := json.Marshal(&roverStruct)
-			Check(err)
-			roverData = string(bytes)
-			fmt.Println(roverData)
+			// ReturnRoverData returns a pointer to a Rover
+			roverData = roverStruct
 		} else if updateData == "true" {
 			fmt.Println("updateData == true")
 			roverFile := fmt.Sprintf("data/%s.json", roverParam)
@@ -85,25 +84,26 @@ func main() {
 			WriteFile("data/manifest.json", manifestBytes)
 			status := <-FileChange
 			if status == true {
+				manifestData = &manifest
 				roverBytes := ReturnLatestRoverData(c)
+				roverStruct := ReturnRoverData(roverParam)
+				json.Unmarshal(roverBytes, roverStruct)
+				roverBytes, err := json.Marshal(roverStruct)
+				Check(err)
 				WriteFile(roverFile, roverBytes)
-				FileChange <- true
+				status := <-FileChange
 				if status == true {
-					roverStruct := ReturnRoverData(roverParam)
-					fmt.Println(roverStruct.MaxDate)
-					bytes, err := json.Marshal(roverStruct)
-					Check(err)
-					roverData = string(bytes)
+					fmt.Println("2 if status == true")
+					fmt.Println("roverStruct.MaxDate", roverStruct.MaxDate)
+					roverData = roverStruct
 				}
 			}
 		}
 
-		close(FileChange)
-
 		fmt.Println("out of condition")
 		c.JSON(http.StatusOK, gin.H{
-			"manifest": &manifestData,
-			"rover":    &roverData,
+			"manifest": *manifestData,
+			"rover":    *roverData,
 		})
 	})
 
@@ -113,13 +113,13 @@ func main() {
 func ReturnRoverData(rover string) *Rover {
 	switch rover {
 	case "curiosity":
-		return Curiosity
+		return &Curiosity
 	case "opportunity":
-		return Opportunity
+		return &Opportunity
 	case "spirit":
-		return Spirit
+		return &Spirit
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
-		return emptyRover
+		return &emptyRover
 	}
 }

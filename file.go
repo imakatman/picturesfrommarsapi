@@ -21,12 +21,10 @@ func (e *emptyFileErr) Error() string {
 	return fmt.Sprintf("%s is empty", e.file)
 }
 
-func InitAndWatch(path string, obj interface{}, c chan bool) {
+func InitAndWatch(path string, obj *interface{}, c chan bool) {
 	fmt.Println("InitAndWatch", path)
 
 	bytes, err := SlurpFile(path)
-
-	fmt.Println(string(bytes))
 
 	if err != nil{
 		switch err.(type) {
@@ -39,12 +37,14 @@ func InitAndWatch(path string, obj interface{}, c chan bool) {
 		}
 	}
 
-	json.Unmarshal(bytes, obj)
+	json.Unmarshal(bytes, *obj)
+	fmt.Println("*obj", *obj)
 	c <- true
+	// obj already is memory address so just pass it regularly
 	watchFile(path, obj)
 }
 
-func watchFile(path string, obj interface{}) {
+func watchFile(path string, obj *interface{}) {
 	fmt.Println("watchFile")
 	bytesFromFile, _ := SlurpFile(path)
 
@@ -62,7 +62,7 @@ func watchFile(path string, obj interface{}) {
 			case ev := <-watcher.Event:
 				fmt.Println("watcher event", ev)
 				fmt.Println("event:", ev)
-				json.Unmarshal(bytesFromFile, obj)
+				json.Unmarshal(bytesFromFile, *obj)
 				fmt.Println("FileChange <- true")
 				FileChange <- true
 				//fmt.Sprintf("FileChange is %v", FileChange)
@@ -106,7 +106,7 @@ func SlurpFile(path string) ([]byte, error) {
 }
 
 func WriteFile(file string, data []byte) {
-	fmt.Println("WriteFile")
+	fmt.Println("WriteFile", file)
 	err := ioutil.WriteFile(file, data, 0644)
 	Check(err)
 }

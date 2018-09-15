@@ -1,3 +1,6 @@
+// 9/14/2018
+// @TODO #4: Create a method of combining picture data with rover data
+
 package main
 
 type Config struct {
@@ -29,11 +32,13 @@ type Camera struct {
 }
 
 type Pictures struct {
-	RoverName string
-	RoverId   int8
-	Day       string  `json:"earth_date"`
-	Camera    *Camera `json:"camera"`
-	Picture   *Picture
+	Rover struct {
+		Name string `json:"name"`
+		Id   int8   `json:"id"`
+	} `json:"rover"`
+	Day     string   `json:"earth_date"`
+	Cameras []Camera `json:"camera"`
+	Picture Picture
 }
 
 type Picture struct {
