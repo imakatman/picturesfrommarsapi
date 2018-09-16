@@ -35,9 +35,9 @@ func ReturnLatestManifest(c *gin.Context) []byte {
 	return bodyBytes
 }
 
-func ReturnLatestRoverData(c *gin.Context) []byte {
+func ReturnLatestRoverPictures(c *gin.Context) []byte {
 	roverParam := c.Param("rover")
-	roverStruct := *ReturnRoverData(roverParam)
+	roverStruct := *ReturnRoverStruct(roverParam)
 
 	fmt.Println(roverStruct)
 	apiUrl := fmt.Sprintf(

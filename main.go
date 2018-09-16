@@ -1,5 +1,6 @@
 // 09-10-2018
 // @TODO #3: Create interface for manifest and rover?
+// @TODO #5: In init(), write a function to just slurp and unmarshall Rover structs
 
 package main
 
@@ -13,9 +14,13 @@ import (
 
 var manifest Manifest
 var Curiosity Rover
+var CuriosityPictures Pictures
 var Opportunity Rover
+var OpportunityPictures Pictures
 var Spirit Rover
+var SpiritPictures Pictures
 var emptyRover Rover
+var emptyRoverPictures Pictures
 
 var FileChange chan bool
 
@@ -25,13 +30,14 @@ func init() {
 	type dataPair struct {
 		file string
 		obj  interface{}
+
 	}
 
 	dataPairs := []dataPair{
 		{"data/manifest.json", &manifest},
-		{"data/curiosity.json", &Curiosity},
-		{"data/opportunity.json", &Opportunity},
-		{"data/spirit.json", &Spirit},
+		{"data/curiosity.json", &CuriosityPictures},
+		{"data/opportunity.json", &OpportunityPictures},
+		{"data/spirit.json", &SpiritPictures},
 	}
 
 	for i, v := range dataPairs {
@@ -65,7 +71,7 @@ func main() {
 	})
 
 	r.GET("/rover/:rover", func(c *gin.Context) {
-		var roverData *Rover
+		var picturesData *Pictures
 		var manifestData *Manifest
 		updateData := c.Query("update")
 		roverParam := c.Param("rover")
@@ -73,29 +79,26 @@ func main() {
 		if updateData == "" {
 			fmt.Println("updateData is empty string")
 			manifestData = &manifest
-			roverStruct := ReturnRoverData(roverParam)
-			// ReturnRoverData returns a pointer to a Rover
-			roverData = roverStruct
+			picturesStruct := ReturnRoverPicturesStruct(roverParam)
+			// ReturnRoverPictures returns a pointer to Pictures
+			picturesData = picturesStruct
 		} else if updateData == "true" {
 			fmt.Println("updateData == true")
 			roverFile := fmt.Sprintf("data/%s.json", roverParam)
-			// Update Manifest
+			// Update Manifest with latest data to use when returning latest rover pictures
 			manifestBytes := ReturnLatestManifest(c)
 			WriteFile("data/manifest.json", manifestBytes)
 			status := <-FileChange
 			if status == true {
 				manifestData = &manifest
-				roverBytes := ReturnLatestRoverData(c)
-				roverStruct := ReturnRoverData(roverParam)
-				json.Unmarshal(roverBytes, roverStruct)
-				roverBytes, err := json.Marshal(roverStruct)
-				Check(err)
-				WriteFile(roverFile, roverBytes)
+				picturesStruct := ReturnRoverPicturesStruct(roverParam)
+				picturesBytes := ReturnLatestRoverPictures(c)
+				json.Unmarshal(picturesBytes, picturesStruct)
+				WriteFile(roverFile, picturesBytes)
 				status := <-FileChange
 				if status == true {
 					fmt.Println("2 if status == true")
-					fmt.Println("roverStruct.MaxDate", roverStruct.MaxDate)
-					roverData = roverStruct
+					picturesData = picturesStruct
 				}
 			}
 		}
@@ -103,14 +106,14 @@ func main() {
 		fmt.Println("out of condition")
 		c.JSON(http.StatusOK, gin.H{
 			"manifest": *manifestData,
-			"rover":    *roverData,
+			"rover":    *picturesData,
 		})
 	})
 
 	r.Run(":8080")
 }
 
-func ReturnRoverData(rover string) *Rover {
+func ReturnRoverStruct(rover string) *Rover{
 	switch rover {
 	case "curiosity":
 		return &Curiosity
@@ -121,5 +124,19 @@ func ReturnRoverData(rover string) *Rover {
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
 		return &emptyRover
+	}
+}
+
+func ReturnRoverPicturesStruct(rover string) *Pictures{
+	switch rover {
+	case "curiosity":
+		return &CuriosityPictures
+	case "opportunity":
+		return &OpportunityPictures
+	case "spirit":
+		return &SpiritPictures
+	default:
+		log.Println("Rover parameter provided was not of an expected kind: ", rover)
+		return &emptyRoverPictures
 	}
 }
