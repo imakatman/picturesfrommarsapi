@@ -3,13 +3,15 @@
 
 package main
 
+import "log"
+
 type Config struct {
 	url   string
 	token []string
 }
 
 type Manifest struct {
-	Rovers []Rover `json:"rovers"`
+	AllRovers []Rover `json:"rovers"`
 }
 
 type Rover struct {
@@ -50,3 +52,32 @@ type Picture struct {
 	ImgSrc string `json:"img_src"`
 	Id     int16  `json:"id"`
 }
+
+func ReturnRoverStruct(rover string) *Rover{
+	switch rover {
+	case "Curiosity":
+		return &Curiosity
+	case "Opportunity":
+		return &Opportunity
+	case "Spirit":
+		return &Spirit
+	default:
+		log.Println("Rover parameter provided was not of an expected kind: ", rover)
+		return &emptyRover
+	}
+}
+
+func ReturnRoverPicturesStruct(rover string) *Pictures{
+	switch rover {
+	case "curiosity":
+		return &CuriosityPictures
+	case "opportunity":
+		return &OpportunityPictures
+	case "spirit":
+		return &SpiritPictures
+	default:
+		log.Println("Rover parameter provided was not of an expected kind: ", rover)
+		return &emptyRoverPictures
+	}
+}
+

@@ -8,7 +8,7 @@ import (
 )
 
 var apiConfig = Config{
-	url: "https://api.nasa.gov/mars-photos/api/v1/rovers",
+	url: "http://api.nasa.gov/mars-photos/api/v1/rovers",
 	token: []string{
 		"8m8bkcVYqxE5j0vQL2wk1bpiBGibgaqCrOvwZVyU",
 		"a4q0jhngYKp9kn0cuwvKMHtKz7IrkKtFBRaiMv5t",

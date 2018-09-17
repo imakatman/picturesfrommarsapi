@@ -4,12 +4,12 @@
 package main
 
 import (
-	"github.com/howeyc/fsnotify"
-	"log"
 	"fmt"
-	"encoding/json"
 	"io/ioutil"
 	"os"
+	"log"
+	"encoding/json"
+	"github.com/howeyc/fsnotify"
 )
 
 type emptyFileErr struct {
@@ -21,31 +21,8 @@ func (e *emptyFileErr) Error() string {
 	return fmt.Sprintf("%s is empty", e.file)
 }
 
-func InitAndWatch(path string, obj *interface{}, c chan bool) {
-	fmt.Println("InitAndWatch", path)
-
-	bytes, err := SlurpFile(path)
-
-	if err != nil{
-		switch err.(type) {
-		case *emptyFileErr:
-			fmt.Println("api call should be made")
-			// make api call and create file
-		default:
-			// default behavior should be to try and run this function again
-			InitAndWatch(path, obj, c)
-		}
-	}
-
-	json.Unmarshal(bytes, *obj)
-	fmt.Println("*obj", *obj)
-	c <- true
-	// obj already is memory address so just pass it regularly
-	watchFile(path, obj)
-}
-
-func watchFile(path string, obj *interface{}) {
-	fmt.Println("watchFile")
+func WatchFile(path string, obj *interface{}) {
+	//fmt.Println("watchFile")
 	bytesFromFile, _ := SlurpFile(path)
 
 	watcher, err := fsnotify.NewWatcher()
@@ -83,6 +60,7 @@ func watchFile(path string, obj *interface{}) {
 	/* ... do stuff ... */
 	watcher.Close()
 }
+
 
 /*
 First make sure the file is not empty.
