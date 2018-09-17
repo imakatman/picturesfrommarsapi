@@ -1,5 +1,5 @@
 // 09-11-2018
-// @TODO re:#2: Look into setting up error types. It will be useful to pass values other than messages into the error that is returned from SlurpFile
+// @TODO #6: When Manifest file is modified, the new data isn't being properly unmarshaled into the variable. Fix this.
 
 package main
 
@@ -22,7 +22,7 @@ func (e *emptyFileErr) Error() string {
 }
 
 func WatchFile(path string, obj *interface{}) {
-	//fmt.Println("watchFile")
+	fmt.Println("watchFile", *obj)
 	bytesFromFile, _ := SlurpFile(path)
 
 	watcher, err := fsnotify.NewWatcher()
@@ -41,8 +41,8 @@ func WatchFile(path string, obj *interface{}) {
 				fmt.Println("event:", ev)
 				json.Unmarshal(bytesFromFile, *obj)
 				fmt.Println("FileChange <- true")
+				fmt.Println(*obj)
 				FileChange <- true
-				//fmt.Sprintf("FileChange is %v", FileChange)
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}

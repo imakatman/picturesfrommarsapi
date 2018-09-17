@@ -1,6 +1,5 @@
 // 09-10-2018
 // @TODO #3: Create interface for manifest and rover?
-// @TODO #5: In init(), write a function to just slurp and unmarshall Rover structs
 
 package main
 
@@ -23,6 +22,7 @@ var emptyRoverPictures Pictures
 var FileChange chan bool
 
 func init() {
+	gin.SetMode(gin.DebugMode)
 	InitializeData()
 }
 
@@ -37,9 +37,9 @@ func main() {
 		c.JSON(http.StatusOK, Rovers)
 	})
 
-	r.GET("/rover/:rover", handleRoverGet)
+	fmt.Println("right before rover route line")
 
-	fmt.Println("right before run")
+	r.GET("/rover/:rover", HandleRoverGet)
 
 	r.Run()
 }

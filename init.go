@@ -27,12 +27,14 @@ func InitializeData() {
 	for i, v := range dataDrawers {
 		 if i == 0 {
 			go func() {
+				fmt.Println(i)
 				InitAndWatch(v.file, &v.obj, launched)
 			}()
 		}
 
 		if <-launched == true {
 			go func() {
+				fmt.Println(i)
 				if i == 1 {
 					roverSlices := Rovers.AllRovers
 					for _, v := range roverSlices{
@@ -49,7 +51,7 @@ func InitializeData() {
 }
 
 func InitAndWatch(path string, obj *interface{}, c chan bool) {
-	//fmt.Println("InitAndWatch", path)
+	fmt.Println("InitAndWatch", *obj)
 
 	bytes, err := SlurpFile(path)
 
@@ -60,6 +62,7 @@ func InitAndWatch(path string, obj *interface{}, c chan bool) {
 			// make api call and create file
 		default:
 			// default behavior should be to try and run this function again
+			fmt.Println("default behavior for err switch in InitAndWatch")
 			InitAndWatch(path, obj, c)
 		}
 	}

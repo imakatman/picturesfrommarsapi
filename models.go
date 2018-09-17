@@ -55,11 +55,11 @@ type Picture struct {
 
 func ReturnRoverStruct(rover string) *Rover{
 	switch rover {
-	case "Curiosity":
+	case "curiosity", "Curiosity":
 		return &Curiosity
-	case "Opportunity":
+	case "opportunity", "Opportunity":
 		return &Opportunity
-	case "Spirit":
+	case "spirit", "Spirit":
 		return &Spirit
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
@@ -69,11 +69,11 @@ func ReturnRoverStruct(rover string) *Rover{
 
 func ReturnRoverPicturesStruct(rover string) *Pictures{
 	switch rover {
-	case "curiosity":
+	case "curiosity", "Curiosity":
 		return &CuriosityPictures
-	case "opportunity":
+	case "opportunity", "Opportunity":
 		return &OpportunityPictures
-	case "spirit":
+	case "spirit", "Spirit":
 		return &SpiritPictures
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)

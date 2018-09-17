@@ -8,7 +8,7 @@ import (
 )
 
 var apiConfig = Config{
-	url: "http://api.nasa.gov/mars-photos/api/v1/rovers",
+	url: "https://api.nasa.gov/mars-photos/api/v1/rovers",
 	token: []string{
 		"8m8bkcVYqxE5j0vQL2wk1bpiBGibgaqCrOvwZVyU",
 		"a4q0jhngYKp9kn0cuwvKMHtKz7IrkKtFBRaiMv5t",
@@ -30,7 +30,7 @@ func ReturnLatestManifest(c *gin.Context) []byte {
 		fmt.Println(err)
 	}
 
-	fmt.Println(string(bodyBytes))
+	fmt.Println("ReturnLatestManifest was successful")
 
 	return bodyBytes
 }
