@@ -38,6 +38,7 @@ func HandleRoverGet(c *gin.Context) {
 		 initialize manifestData again
 		*/
 		manifestData = &Rovers
+		fmt.Println(*manifestData)
 		picturesStruct := ReturnRoverPicturesStruct(roverParam)
 		picturesBytes := ReturnLatestRoverPictures(c)
 

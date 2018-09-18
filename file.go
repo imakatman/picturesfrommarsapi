@@ -33,21 +33,23 @@ func WatchFile(path string, obj *interface{}) {
 	done := make(chan bool)
 
 	// Process events
-	go func() {
+	go func(model *interface{}) {
+		fmt.Println("WatchFile inside gofunc before for loop", *model)
 		for {
 			select {
 			case ev := <-watcher.Event:
+				fmt.Println(*model)
 				fmt.Println("watcher event", ev)
 				fmt.Println("event:", ev)
-				json.Unmarshal(bytesFromFile, *obj)
+				json.Unmarshal(bytesFromFile, &model)
 				fmt.Println("FileChange <- true")
-				fmt.Println(*obj)
+				fmt.Println(*model)
 				FileChange <- true
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
 		}
-	}()
+	}(obj)
 
 	err = watcher.Watch(path)
 	if err != nil {

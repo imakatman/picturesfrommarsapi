@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 )
 
+// InitializeData converts the data that exists in the JSON files in /data
+// into variables of the Manifest, Rover, and Pictures structs. Then it will
+// launch WatchFile() functions for each file to keep track of whether the files
+// are modified.
 func InitializeData() {
 	launched := make(chan bool)
 
@@ -32,6 +36,10 @@ func InitializeData() {
 			}()
 		}
 
+		// This condition will only run if the previous condition
+		// has run. With that assumption, in the first invocation of
+		// this condition, range over the Rovers variable and Unmarshal
+		// the data into the appropriate Rover variables.
 		if <-launched == true {
 			go func() {
 				fmt.Println(i)
@@ -42,6 +50,7 @@ func InitializeData() {
 						bytes, err := json.Marshal(v)
 						Check(err)
 						json.Unmarshal(bytes, r)
+						fmt.Println(r)
 					}
 				}
 				InitAndWatch(v.file, &v.obj, launched)
@@ -51,8 +60,6 @@ func InitializeData() {
 }
 
 func InitAndWatch(path string, obj *interface{}, c chan bool) {
-	fmt.Println("InitAndWatch", *obj)
-
 	bytes, err := SlurpFile(path)
 
 	if err != nil {
@@ -68,7 +75,8 @@ func InitAndWatch(path string, obj *interface{}, c chan bool) {
 	}
 
 	json.Unmarshal(bytes, *obj)
-	//fmt.Println("*obj", *obj)
+
+	fmt.Println("InitAndWatch", *obj)
 	c <- true
 	// obj already is memory address so just pass it regularly
 	WatchFile(path, obj)
