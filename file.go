@@ -21,8 +21,8 @@ func (e *emptyFileErr) Error() string {
 	return fmt.Sprintf("%s is empty", e.file)
 }
 
-func WatchFile(path string, obj *interface{}) {
-	fmt.Println("watchFile", *obj)
+func WatchFile(path string, obj interface{}) {
+	fmt.Println("watchFile", obj)
 	bytesFromFile, _ := SlurpFile(path)
 
 	watcher, err := fsnotify.NewWatcher()
@@ -33,23 +33,23 @@ func WatchFile(path string, obj *interface{}) {
 	done := make(chan bool)
 
 	// Process events
-	go func(model *interface{}) {
-		fmt.Println("WatchFile inside gofunc before for loop", *model)
+	go func() {
+		fmt.Println("WatchFile inside gofunc before for loop", path, obj)
 		for {
 			select {
 			case ev := <-watcher.Event:
-				fmt.Println(*model)
+				fmt.Println(obj)
 				fmt.Println("watcher event", ev)
 				fmt.Println("event:", ev)
-				json.Unmarshal(bytesFromFile, &model)
+				json.Unmarshal(bytesFromFile, &obj)
 				fmt.Println("FileChange <- true")
-				fmt.Println(*model)
+				fmt.Println(obj)
 				FileChange <- true
 			case err := <-watcher.Error:
 				fmt.Println("error:", err)
 			}
 		}
-	}(obj)
+	}()
 
 	err = watcher.Watch(path)
 	if err != nil {

@@ -32,13 +32,7 @@ type AllCameras struct {
 }
 
 type Pictures struct {
-	Rover struct {
-		Name string `json:"name"`
-		Id   int8   `json:"id"`
-	} `json:"rover"`
-	Day     string   `json:"earth_date"`
-	Camera  []Camera `json:"camera"`
-	Picture Picture
+	Picture []Picture `json:"photos"`
 }
 
 type Camera struct {
@@ -49,6 +43,12 @@ type Camera struct {
 }
 
 type Picture struct {
+	Rover struct {
+		Name string `json:"name"`
+		Id   int8   `json:"id"`
+	} `json:"rover"`
+	Day     string   `json:"earth_date"`
+	Camera  []Camera `json:"camera"`
 	ImgSrc string `json:"img_src"`
 	Id     int16  `json:"id"`
 }

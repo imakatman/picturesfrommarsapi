@@ -10,7 +10,7 @@ import (
 // launch WatchFile() functions for each file to keep track of whether the files
 // are modified.
 func InitializeData() {
-	launched := make(chan bool)
+	//launched := make(chan bool)
 
 	type dataDrawer struct {
 		name string
@@ -28,38 +28,33 @@ func InitializeData() {
 		{"Spirit Pictures", "data/spiritPictures.json", &SpiritPictures},
 	}
 
-	for i, v := range dataDrawers {
-		 if i == 0 {
-			go func() {
-				fmt.Println(i)
-				InitAndWatch(v.file, &v.obj, launched)
-			}()
-		}
+	for _, v := range dataDrawers {
+		go func(dd dataDrawer) {
+			fmt.Println(dd.name)
+			InitAndWatch(dd.file, dd.obj)
 
-		// This condition will only run if the previous condition
-		// has run. With that assumption, in the first invocation of
-		// this condition, range over the Rovers variable and Unmarshal
-		// the data into the appropriate Rover variables.
-		if <-launched == true {
-			go func() {
-				fmt.Println(i)
-				if i == 1 {
-					roverSlices := Rovers.AllRovers
-					for _, v := range roverSlices{
-						r := ReturnRoverStruct(v.Name)
-						bytes, err := json.Marshal(v)
-						Check(err)
-						json.Unmarshal(bytes, r)
-						fmt.Println(r)
-					}
+			// This condition will only run if the previous condition
+			// has run. With that assumption, in the first invocation of
+			// this condition, range over the Rovers variable and Unmarshal
+			// the data into the appropriate Rover variables.
+
+			if dd.name == "Manifest" {
+				roverSlices := Rovers.AllRovers
+				fmt.Println("roverSlices", roverSlices)
+				for _, r := range roverSlices {
+					r := ReturnRoverStruct(r.Name)
+					bytes, err := json.Marshal(r)
+					Check(err)
+					json.Unmarshal(bytes, r)
+					fmt.Println("for _, v := range roverSlices", v)
 				}
-				InitAndWatch(v.file, &v.obj, launched)
-			}()
-		}
+			}
+			InitAndWatch(dd.file, dd.obj)
+		}(v)
 	}
 }
 
-func InitAndWatch(path string, obj *interface{}, c chan bool) {
+func InitAndWatch(path string, obj interface{}) {
 	bytes, err := SlurpFile(path)
 
 	if err != nil {
@@ -70,14 +65,11 @@ func InitAndWatch(path string, obj *interface{}, c chan bool) {
 		default:
 			// default behavior should be to try and run this function again
 			fmt.Println("default behavior for err switch in InitAndWatch")
-			InitAndWatch(path, obj, c)
+			InitAndWatch(path, obj)
 		}
 	}
 
-	json.Unmarshal(bytes, *obj)
-
-	fmt.Println("InitAndWatch", *obj)
-	c <- true
+	json.Unmarshal(bytes, obj)
 	// obj already is memory address so just pass it regularly
 	WatchFile(path, obj)
 }

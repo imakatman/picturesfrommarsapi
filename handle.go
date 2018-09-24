@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"net/http"
+	"io/ioutil"
 )
 
 /*
@@ -13,6 +14,13 @@ import (
 */
 var picturesData *Pictures
 var manifestData *Manifest
+
+func initVariables(rover string) {
+	// Return data that are in variables
+	manifestData = &Rovers
+	// ReturnRoverPictures returns a pointer to Pictures
+	picturesData = ReturnRoverPicturesStruct(rover)
+}
 
 func HandleRoverGet(c *gin.Context) {
 	fmt.Println("handleRoverGet")
@@ -39,13 +47,18 @@ func HandleRoverGet(c *gin.Context) {
 		*/
 		manifestData = &Rovers
 		fmt.Println(*manifestData)
-		picturesStruct := ReturnRoverPicturesStruct(roverParam)
-		picturesBytes := ReturnLatestRoverPictures(c)
+		fmt.Println(" //////////////////////////// ")
 
+		picturesStruct := ReturnRoverPicturesStruct(roverParam)
+		picturesBytes, picturesReceived := ReturnLatestRoverPictures(c)
+
+		<-picturesReceived
 		// unmarshal latest pictures data into pictures struct
 		fmt.Println("before unmarshall picturesStruct is", picturesStruct)
+		fmt.Println(" //////////////////////////// ")
 		json.Unmarshal(picturesBytes, picturesStruct)
 		fmt.Println("after unmarshall picturesStruct is", picturesStruct)
+		fmt.Println(" //////////////////////////// ")
 		// update picture file with latest picture data
 		WriteFile(pictureFile, picturesBytes)
 		<-FileChange
@@ -57,13 +70,78 @@ func HandleRoverGet(c *gin.Context) {
 		 with latest data
 		*/
 		fmt.Println("2 if status == true")
+		fmt.Println(" //////////////////////////// ")
 		picturesData = picturesStruct
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":    *picturesData,
+		})
 	}
 }
 
-func initVariables(rover string) {
-	// Return data that are in variables
-	manifestData = &Rovers
-	// ReturnRoverPictures returns a pointer to Pictures
-	picturesData = ReturnRoverPicturesStruct(rover)
+var apiConfig = Config{
+	url: "https://api.nasa.gov/mars-photos/api/v1/rovers",
+	token: []string{
+		"8m8bkcVYqxE5j0vQL2wk1bpiBGibgaqCrOvwZVyU",
+		"a4q0jhngYKp9kn0cuwvKMHtKz7IrkKtFBRaiMv5t",
+		"ef0eRn0aLh0Byb8q7wCniHbiqcjfDWITSIJVh9xy",
+	},
+}
+
+func ReturnLatestManifest(c *gin.Context) []byte {
+	// @TODO: Write a function that returns a different token if the one in use is invalid
+	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token[0])
+	response, err := http.Get(apiUrl)
+	if err != nil || response.StatusCode != http.StatusOK {
+		c.Status(http.StatusServiceUnavailable)
+		fmt.Println(err)
+	}
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("ReturnLatestManifest was successful")
+
+	return bodyBytes
+}
+
+func ReturnLatestRoverPictures(c *gin.Context) ([]byte, chan bool) {
+	picturesReceived := make(chan bool, 1)
+	roverParam := c.Param("rover")
+	roverStruct := *ReturnRoverStruct(roverParam)
+
+	fmt.Println(roverStruct)
+	fmt.Println(" //////////////////////////// ")
+	apiUrl := fmt.Sprintf(
+		"%s/%s/photos?api_key=%s&earth_date=%s",
+		apiConfig.url,
+		roverParam,
+		apiConfig.token[0],
+		roverStruct.MaxDate,
+	)
+
+	fmt.Println("apiUrl", apiUrl)
+	fmt.Println(" //////////////////////////// ")
+	response, err := http.Get(apiUrl)
+	if err != nil || response.StatusCode != http.StatusOK {
+		c.Status(http.StatusServiceUnavailable)
+		fmt.Println(err)
+	}
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(string(bodyBytes))
+	fmt.Println(" //////////////////////////// ")
+	fmt.Println(&picturesReceived)
+	fmt.Println(" //////////////////////////// ")
+
+	// VERY IMPORTANT TO CLOSE CHANNEL
+	close(picturesReceived)
+
+	return bodyBytes, picturesReceived
 }
