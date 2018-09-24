@@ -1,5 +1,7 @@
 // 09-11-2018
 // @TODO #6: When Manifest file is modified, the new data isn't being properly unmarshaled into the variable. Fix this.
+// 09-23-2018
+// ^^ Working: &{[{5 Curiosity 2012-08-06 2011-11-26 active 2172 2018-09-15 341463 [{FHAZ Front Hazard Avoidance Camera} {NAVCAM Navigation Camera} {MAST Mast Camera} {CHEMCAM Chemistry and Camera Complex} {MAHLI Mars Hand Lens Imager} {MARDI Mars Descent Imager} {RHAZ Rear Hazard Avoidance Camera}]} {6 Opportunity 2004-01-25 2003-07-07 active 5111 2018-06-11 198439 [{FHAZ Front Hazard Avoidance Camera} {NAVCAM Navigation Camera} {PANCAM Panoramic Camera} {MINITES Miniature Thermal Emission Spectrometer (Mini-TES)} {ENTRY Entry, Descent, and Landing Camera} {RHAZ Rear Hazard Avoidance Camera}]} {7 Spirit 2004-01-04 2003-06-10 complete 2208 2010-03-21 124550 [{FHAZ Front Hazard Avoidance Camera} {NAVCAM Navigation Camera} {PANCAM Panoramic Camera} {MINITES Miniature Thermal Emission Spectrometer (Mini-TES)} {ENTRY Entry, Descent, and Landing Camera} {RHAZ Rear Hazard Avoidance Camera}]}]}
 
 package main
 

@@ -40,14 +40,14 @@ func HandleRoverGet(c *gin.Context) {
 		<-FileChange
 
 		fmt.Println("first channel came back")
+		fmt.Println(" //////////////////////////// ")
+		fmt.Println("roverParam", roverParam)
 		pictureFile := fmt.Sprintf("data/%sPictures.json", roverParam)
 		/*
 		 now that we've received latest data from nasa api
 		 initialize manifestData again
 		*/
 		manifestData = &Rovers
-		fmt.Println(*manifestData)
-		fmt.Println(" //////////////////////////// ")
 
 		picturesStruct := ReturnRoverPicturesStruct(roverParam)
 		picturesBytes, picturesReceived := ReturnLatestRoverPictures(c)
@@ -110,9 +110,13 @@ func ReturnLatestManifest(c *gin.Context) []byte {
 func ReturnLatestRoverPictures(c *gin.Context) ([]byte, chan bool) {
 	picturesReceived := make(chan bool, 1)
 	roverParam := c.Param("rover")
+
+	fmt.Println("ReturnLatestRoverPictures roverParam", roverParam)
+	fmt.Println(" //////////////////////////// ")
+
 	roverStruct := *ReturnRoverStruct(roverParam)
 
-	fmt.Println(roverStruct)
+	fmt.Println("ReturnLatestRoverPictures roverStruct", roverStruct)
 	fmt.Println(" //////////////////////////// ")
 	apiUrl := fmt.Sprintf(
 		"%s/%s/photos?api_key=%s&earth_date=%s",
