@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"os"
+	"io/ioutil"
 )
 
 // InitializeData converts the data that exists in the JSON files in /data
@@ -33,35 +34,59 @@ func InitializeData() {
 		{"Spirit Pictures", "data/spiritPictures.json", &SpiritPictures},
 	}
 
-	for _, v := range dataDrawers {
+	didInitalizeDataDrawer := make(chan int, 7)
+
+	go func(dd dataDrawer) {
+		fmt.Println("manifest dd.name", dd.name)
+		var bytes []byte
+		if isFileEmpty(dd.file) {
+			// If file is empty, grab latest manifest data from NASA api
+			body, err := ReturnLatestManifest()
+			Check(err)
+			bodyBytes, readerErr := ioutil.ReadAll(body)
+			Check(readerErr)
+			bytes = bodyBytes
+		} else {
+			// Slurp the bytes out of the manifest file
+			fileBytes, err := SlurpFile(dd.file)
+			bytes = fileBytes
+			Check(err)
+		}
+
+		// Unmarshal the manifest bytes into Rovers variable
+		json.Unmarshal(bytes, &Rovers)
+
+		fmt.Println("Rovers", Rovers)
+
+		// Range over the slice of data in the AllRovers field in the Rovers struct variable
+		// Each slice of data is a Rover struct
+		//@TODO: Finish this. Unmarshalling rover data into the variable
+		for _, r := range Rovers.AllRovers {
+			fmt.Println("for _, v := range roverSlices", r)
+			json.Unmarshal(bytes, &Rovers)
+			//roverStruct := ReturnRoverStruct(r.Name)
+			//bytes, err := json.Marshal(roverStruct)
+			//Check(err)
+			//json.Unmarshal(bytes, r)
+		}
+
+		InitAndWatch(dd.file, dd.obj)
+		didInitalizeDataDrawer <- 0
+
+	}(dataDrawers[0])
+
+	for i := range didInitalizeDataDrawer {
 		go func(dd dataDrawer) {
 			fmt.Println("dd.name", dd.name)
-
-			if dd.name == "Manifest" {
-				//if isFileEmpty(dd.file){
-				//
-				//}
-				bytes, err := SlurpFile(dd.file)
-				Check(err)
-				json.Unmarshal(bytes, &dd.obj)
-				roverSlices := Rovers.AllRovers
-				fmt.Println("Rovers", Rovers)
-				fmt.Println("roverSlices", roverSlices)
-				for _, r := range roverSlices {
-					r := ReturnRoverStruct(r.Name)
-					bytes, err := json.Marshal(r)
-					Check(err)
-					json.Unmarshal(bytes, r)
-					fmt.Println("for _, v := range roverSlices", v)
-				}
-				fmt.Println("InitializeData", dd.name, dd.obj)
-				// @TODO Might need to write a function that fills the rover files with data in case the files are empty!
-				InitAndWatch(dd.file, dd.obj)
-			} else {
-				fmt.Println("InitializeData", dd.name, dd.obj)
-				InitAndWatch(dd.file, dd.obj)
-			}
-		}(v)
+			r := ReturnRoverStruct(dd.name)
+			bytes, err := json.Marshal(r)
+			Check(err)
+			WriteFile(dd.file, bytes)
+			//// @TODO Might need to write a function that fills the rover files with data in case the files are empty!
+			fmt.Println("InitializeData", dd.name, dd.obj)
+			InitAndWatch(dd.file, dd.obj)
+			didInitalizeDataDrawer <- i+1
+		}(dataDrawers[i+1])
 	}
 }
 
@@ -85,13 +110,13 @@ func InitAndWatch(path string, obj interface{}) {
 	WatchFile(path, obj)
 }
 
-func isFileEmpty(path string) bool{
+func isFileEmpty(path string) bool {
 	fi, e := os.Stat(path)
 	if e != nil {
 		panic(e)
 	}
 	// get the size
-	if fi.Size() != 0{
+	if fi.Size() != 0 {
 		return false
 	} else {
 		return true
