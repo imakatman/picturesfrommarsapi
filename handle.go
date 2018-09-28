@@ -114,6 +114,7 @@ func ReturnLatestManifest() (io.Reader, error) {
 	return response.Body, nil
 }
 
+// @TODO: Refactor so it doesnt need conext as a paramter
 func ReturnLatestRoverPictures(c *gin.Context) ([]byte, chan bool) {
 	picturesReceived := make(chan bool, 1)
 	roverParam := c.Param("rover")

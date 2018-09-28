@@ -1,6 +1,7 @@
 // 09-23-2018
 // @TODO #7  Figure out why curiosity, opportunity, and spirit files exist... Same data exists in manifest.json
 // might be because we need it for ReturnRoversStruct which is for
+// @TODO #7  Figure out if the files are necessary
 
 package main
 
@@ -20,38 +21,31 @@ func InitializeData() {
 
 	type dataDrawer struct {
 		name string
-		file string
 		obj  interface{}
 	}
 
 	dataDrawers := []dataDrawer{
-		{"Manifest", "data/manifest.json", &Rovers},
-		{"Curiosity", "data/curiosity.json", &Curiosity},
-		{"Opportunity", "data/opportunity.json", &Opportunity},
-		{"Spirit", "data/spirit.json", &Spirit},
-		{"Curiosity's Pictures", "data/curiosityPictures.json", &CuriosityPictures},
-		{"Opportunity Pictures", "data/opportunityPictures.json", &OpportunityPictures},
-		{"Spirit Pictures", "data/spiritPictures.json", &SpiritPictures},
+		{"Manifest", &Rovers},
+		{"Curiosity", &Curiosity},
+		{"Opportunity", &Opportunity},
+		{"Spirit", &Spirit},
+		{"Curiosity's Pictures", &CuriosityPictures},
+		{"Opportunity Pictures", &OpportunityPictures},
+		{"Spirit Pictures", &SpiritPictures},
 	}
 
 	didInitalizeDataDrawer := make(chan int, 7)
 
+	// Manifest go routine
 	go func(dd dataDrawer) {
 		fmt.Println("manifest dd.name", dd.name)
 		var bytes []byte
-		if isFileEmpty(dd.file) {
-			// If file is empty, grab latest manifest data from NASA api
-			body, err := ReturnLatestManifest()
-			Check(err)
-			bodyBytes, readerErr := ioutil.ReadAll(body)
-			Check(readerErr)
-			bytes = bodyBytes
-		} else {
-			// Slurp the bytes out of the manifest file
-			fileBytes, err := SlurpFile(dd.file)
-			bytes = fileBytes
-			Check(err)
-		}
+
+		reader, err := ReturnLatestManifest()
+		Check(err)
+
+		bytes, readerErr := ioutil.ReadAll(reader)
+		Check(readerErr)
 
 		// Unmarshal the manifest bytes into Rovers variable
 		json.Unmarshal(bytes, &Rovers)
@@ -63,14 +57,10 @@ func InitializeData() {
 		//@TODO: Finish this. Unmarshalling rover data into the variable
 		for _, r := range Rovers.AllRovers {
 			fmt.Println("for _, v := range roverSlices", r)
-			json.Unmarshal(bytes, &Rovers)
-			//roverStruct := ReturnRoverStruct(r.Name)
-			//bytes, err := json.Marshal(roverStruct)
-			//Check(err)
-			//json.Unmarshal(bytes, r)
+			roverStruct := ReturnRoverStruct(r.Name)
+			json.Unmarshal(bytes, r)
 		}
-
-		InitAndWatch(dd.file, dd.obj)
+		//InitAndWatch(dd.file, dd.obj)
 		didInitalizeDataDrawer <- 0
 
 	}(dataDrawers[0])
@@ -79,14 +69,11 @@ func InitializeData() {
 		go func(dd dataDrawer) {
 			fmt.Println("dd.name", dd.name)
 			r := ReturnRoverStruct(dd.name)
-			bytes, err := json.Marshal(r)
-			Check(err)
-			WriteFile(dd.file, bytes)
-			//// @TODO Might need to write a function that fills the rover files with data in case the files are empty!
-			fmt.Println("InitializeData", dd.name, dd.obj)
-			InitAndWatch(dd.file, dd.obj)
-			didInitalizeDataDrawer <- i+1
-		}(dataDrawers[i+1])
+
+			//reader, err := ReturnLatestRoverPictures()
+			//Check(err)
+			didInitalizeDataDrawer <- i + 1
+		}(dataDrawers[4+1])
 	}
 }
 
