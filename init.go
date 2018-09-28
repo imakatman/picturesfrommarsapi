@@ -26,23 +26,21 @@ func InitializeData() {
 	}
 
 	dataDrawers := []dataDrawer{
-		{"Manifest", &Rovers},
-		{"Curiosity", &Curiosity},
-		{"Opportunity", &Opportunity},
-		{"Spirit", &Spirit},
-		{"Curiosity's Pictures", &CuriosityPictures},
-		{"Opportunity Pictures", &OpportunityPictures},
-		{"Spirit Pictures", &SpiritPictures},
+		{"manifest", &Rovers},
+		{"curiosity", &CuriosityPictures},
+		{"opportunity", &OpportunityPictures},
+		{"spirit", &SpiritPictures},
 	}
 
-	didInitalizeDataDrawer := make(chan int, 7)
+	didInitDD := make(chan int, 7)
 
 	// Manifest go routine
 	go func(dd dataDrawer) {
 		fmt.Println("manifest dd.name", dd.name)
 		var bytes []byte
 
-		reader, err := ReturnLatestManifest()
+		reader, responseReceived, err := ReturnLatestManifest()
+		<-responseReceived
 		Check(err)
 
 		bytes, readerErr := ioutil.ReadAll(reader)
@@ -53,28 +51,45 @@ func InitializeData() {
 
 		fmt.Println("Rovers", Rovers)
 
-		// Range over the slice of data in the AllRovers field in the Rovers struct variable
+		// Range over each slice in the AllRovers field in the Rovers struct variable
 		// Each slice of data is a Rover struct
-		//@TODO: Finish this. Unmarshalling rover data into the variable
 		for _, r := range Rovers.AllRovers {
-			fmt.Println("for _, v := range roverSlices", r)
+			// Set the data in the slice as the value of the empty rover variable
 			roverStruct := ReturnRoverStruct(r.Name)
-			json.Unmarshal(bytes, r)
+			*roverStruct = r
+			fmt.Println(fmt.Sprintf("after unmarshall %s is %v", r.Name, roverStruct))
 		}
-		//InitAndWatch(dd.file, dd.obj)
-		didInitalizeDataDrawer <- 0
+		didInitDD <- 0
 
 	}(dataDrawers[0])
 
-	for i := range didInitalizeDataDrawer {
+	// Go routine for the rovers
+	// They run sequentially when the channel, didInitDD returns a value
+	for i := range didInitDD {
+		// If the index is the last index of the dataDrawers slice, close didInitDD and exit out of for loop
+		if i == len(dataDrawers)-1{
+			close(didInitDD)
+			return
+		}
 		go func(dd dataDrawer) {
 			fmt.Println("dd.name", dd.name)
-			r := ReturnRoverStruct(dd.name)
 
-			//reader, err := ReturnLatestRoverPictures()
-			//Check(err)
-			didInitalizeDataDrawer <- i + 1
-		}(dataDrawers[4+1])
+			// Make API request to grab latet rover pictures data
+			reader, responseReceived, err := ReturnLatestRoverPictures(dd.name)
+			<-responseReceived
+			// @TODO: Figure out how to handle api error during initialization
+			Check(err)
+
+			bytes, picturesReaderErr := ioutil.ReadAll(reader)
+			Check(picturesReaderErr)
+
+			picturesStruct := ReturnRoverPicturesStruct(dd.name)
+
+			json.Unmarshal(bytes, picturesStruct)
+
+			fmt.Println("picturesStruct", picturesStruct)
+			didInitDD <- i + 1
+		}(dataDrawers[i+1])
 	}
 }
 

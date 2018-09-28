@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"fmt"
 )
 
 type Config struct {
@@ -56,13 +55,10 @@ type Picture struct {
 func ReturnRoverStruct(rover string) *Rover{
 	switch rover {
 	case "curiosity", "Curiosity":
-		fmt.Println("ReturnRoverPicturesStruct Curiosity", &CuriosityPictures)
 		return &Curiosity
 	case "opportunity", "Opportunity":
-		fmt.Println("ReturnRoverPicturesStruct Opportunity", &OpportunityPictures)
 		return &Opportunity
 	case "spirit", "Spirit":
-		fmt.Println("ReturnRoverPicturesStruct Spirit", &SpiritPictures)
 		return &Spirit
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
@@ -73,13 +69,10 @@ func ReturnRoverStruct(rover string) *Rover{
 func ReturnRoverPicturesStruct(rover string) *Pictures{
 	switch rover {
 	case "curiosity", "Curiosity":
-		fmt.Println("ReturnRoverPicturesStruct Curiosity", &CuriosityPictures)
 		return &CuriosityPictures
 	case "opportunity", "Opportunity":
-		fmt.Println("ReturnRoverPicturesStruct Opportunity", &OpportunityPictures)
 		return &OpportunityPictures
 	case "spirit", "Spirit":
-		fmt.Println("ReturnRoverPicturesStruct Spirit", &SpiritPictures)
 		return &SpiritPictures
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
