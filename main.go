@@ -5,19 +5,21 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"fmt"
-	"net/http"
 )
 
 var Rovers Manifest
 var Curiosity Rover
 var CuriosityPictures Pictures
+var CuriosityDates Dates
 var Opportunity Rover
 var OpportunityPictures Pictures
+var OpportunityDates Dates
 var Spirit Rover
 var SpiritPictures Pictures
+var SpiritDates Dates
 var emptyRover Rover
 var emptyRoverPictures Pictures
+var emptyRoverDates Dates
 
 var FileChange chan bool
 
@@ -27,19 +29,19 @@ func init() {
 }
 
 func main() {
-	r := gin.Default()
-
-	FileChange = make(chan bool)
-
-	r.GET("/manifest", func(c *gin.Context) {
-		fmt.Println("get request for manifest")
-
-		c.JSON(http.StatusOK, Rovers)
-	})
-
-	fmt.Println("right before rover route line")
-
-	r.GET("/rover/:rover", HandleRoverGet)
-
-	r.Run()
+	//r := gin.Default()
+	//
+	//FileChange = make(chan bool)
+	//
+	//r.GET("/manifest", func(c *gin.Context) {
+	//	fmt.Println("get request for manifest")
+	//
+	//	c.JSON(http.StatusOK, Rovers)
+	//})
+	//
+	//fmt.Println("right before rover route line")
+	//
+	//r.GET("/rover/:rover", HandleRoverGet)
+	//
+	//r.Run()
 }

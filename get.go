@@ -32,21 +32,23 @@ func ReturnLatestManifest() (io.Reader, chan bool, error) {
 		return nil, responseReceived, errors.New("there was an error with the GET request")
 	}
 
+	fmt.Println(apiUrl)
+
 	return response.Body, responseReceived, nil
 }
 
-func ReturnLatestRoverPictures(rover string) (io.Reader, chan bool, error) {
+func ReturnLatestRoverPictures(rover string, sol int) (io.Reader, chan bool, error) {
 	responseReceived := make(chan bool, 1)
 
-	roverStruct := *ReturnRoverStruct(rover)
-
 	apiUrl := fmt.Sprintf(
-		"%s/%s/photos?api_key=%s&earth_date=%s",
+		"%s/%s/photos?api_key=%s&sol=%v",
 		apiConfig.url,
 		rover,
 		apiConfig.token[0],
-		roverStruct.MaxDate,
+		sol,
 	)
+
+	fmt.Println(apiUrl)
 
 	response, err := http.Get(apiUrl)
 

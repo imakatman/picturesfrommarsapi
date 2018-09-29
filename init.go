@@ -9,8 +9,9 @@ package main
 import (
 	"fmt"
 	"encoding/json"
-	"os"
 	"io/ioutil"
+	"io"
+	"github.com/tidwall/gjson"
 )
 
 // InitializeData converts the data that exists in the JSON files in /data
@@ -25,18 +26,12 @@ func InitializeData() {
 		obj  interface{}
 	}
 
-	dataDrawers := []dataDrawer{
-		{"manifest", &Rovers},
-		{"curiosity", &CuriosityPictures},
-		{"opportunity", &OpportunityPictures},
-		{"spirit", &SpiritPictures},
-	}
+	var rovers []string
 
-	didInitDD := make(chan int, 7)
+	didInitData := make(chan int, 3)
 
 	// Manifest go routine
-	go func(dd dataDrawer) {
-		fmt.Println("manifest dd.name", dd.name)
+	go func() {
 		var bytes []byte
 
 		reader, responseReceived, err := ReturnLatestManifest()
@@ -44,6 +39,7 @@ func InitializeData() {
 		Check(err)
 
 		bytes, readerErr := ioutil.ReadAll(reader)
+		fmt.Println(string(bytes))
 		Check(readerErr)
 
 		// Unmarshal the manifest bytes into Rovers variable
@@ -51,77 +47,81 @@ func InitializeData() {
 
 		fmt.Println("Rovers", Rovers)
 
+		rovers = make([]string, 0, len(Rovers.AllRovers))
 		// Range over each slice in the AllRovers field in the Rovers struct variable
 		// Each slice of data is a Rover struct
 		for _, r := range Rovers.AllRovers {
+			rovers = append(rovers, r.Name)
+			fmt.Println(rovers, len(rovers))
 			// Set the data in the slice as the value of the empty rover variable
 			roverStruct := ReturnRoverStruct(r.Name)
 			*roverStruct = r
-			fmt.Println(fmt.Sprintf("after unmarshall %s is %v", r.Name, roverStruct))
 		}
-		didInitDD <- 0
+		didInitData <- 0
 
-	}(dataDrawers[0])
+	}()
 
 	// Go routine for the rovers
-	// They run sequentially when the channel, didInitDD returns a value
-	for i := range didInitDD {
-		// If the index is the last index of the dataDrawers slice, close didInitDD and exit out of for loop
-		if i == len(dataDrawers)-1{
-			close(didInitDD)
+	// They run sequentially when the channel, didInitData returns a value
+	for i := range didInitData {
+		fmt.Println(rovers)
+		// If the index is the last index of the dataDrawers slice, close didInitData and exit out of for loop
+		if i == len(rovers)-1 {
+			close(didInitData)
 			return
 		}
-		go func(dd dataDrawer) {
-			fmt.Println("dd.name", dd.name)
+		go func(rover string) {
+			fmt.Println("go func(rover string) {", rover)
 
-			// Make API request to grab latet rover pictures data
-			reader, responseReceived, err := ReturnLatestRoverPictures(dd.name)
-			<-responseReceived
-			// @TODO: Figure out how to handle api error during initialization
-			Check(err)
+			roverData := ReturnRoverStruct(rover)
+			datesStruct := ReturnRoverDatesStruct(rover)
+			//picturesStruct := ReturnRoverPicturesStruct(rover)
+			for x := 0; x < 2; x++ {
+				// Make API request to grab latest rover pictures data
+				// @TODO: Figure out how to handle api error during initialization
+				sol := roverData.MaxSol - x
+				reader, responseReceived, err := ReturnLatestRoverPictures(rover, sol)
+				<-responseReceived
+				Check(err)
 
-			bytes, picturesReaderErr := ioutil.ReadAll(reader)
-			Check(picturesReaderErr)
+				bytes, picturesReaderErr := ioutil.ReadAll(reader)
+				Check(picturesReaderErr)
 
-			picturesStruct := ReturnRoverPicturesStruct(dd.name)
+				earthDate := gjson.GetBytes(bytes, "photos.0.earth_date")
 
-			json.Unmarshal(bytes, picturesStruct)
+				var pictures Pictures
+				json.Unmarshal(bytes, &pictures)
+				fmt.Println("json.Unmarshal(bytes, pictures)", pictures)
 
-			fmt.Println("picturesStruct", picturesStruct)
-			didInitDD <- i + 1
-		}(dataDrawers[i+1])
+				dates := Date{
+					sol,
+					MiniRover{
+						rover,
+						roverData.Id,
+					},
+					earthDate.Str,
+					pictures,
+				}
+
+				fmt.Println(dates)
+				datesStruct.AddDate(dates)
+			}
+			fmt.Println(datesStruct)
+			// Unmarshall the returned data into the rovers pictures struct
+			didInitData <- i + 1
+		}(rovers[i])
 	}
 }
 
-func InitAndWatch(path string, obj interface{}) {
-	bytes, err := SlurpFile(path)
-
-	if err != nil {
-		switch err.(type) {
-		case *emptyFileErr:
-			fmt.Println("api call should be made")
-			// make api call and create file
-		default:
-			// default behavior should be to try and run this function again
-			fmt.Println("default behavior for err switch in InitAndWatch")
-			InitAndWatch(path, obj)
-		}
-	}
-
-	json.Unmarshal(bytes, obj)
-	// obj already is memory address so just pass it regularly
-	WatchFile(path, obj)
+func (dates *Dates) AddDate(date Date) {
+	dates.Date = append(dates.Date, date)
 }
 
-func isFileEmpty(path string) bool {
-	fi, e := os.Stat(path)
-	if e != nil {
-		panic(e)
-	}
-	// get the size
-	if fi.Size() != 0 {
-		return false
-	} else {
-		return true
-	}
+func parseReader(body io.Reader) gjson.Result {
+	bytes, err := ioutil.ReadAll(body)
+	Check(err)
+
+	result := gjson.Parse(string(bytes))
+
+	return result
 }

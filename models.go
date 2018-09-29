@@ -14,14 +14,14 @@ type Manifest struct {
 }
 
 type Rover struct {
-	Id          int16        `json:"id"` // there can't be space between colon and "
+	Id          int        `json:"id"` // there can't be space between colon and "
 	Name        string       `json:"name"`
 	LandingDate string       `json:"landing_date"`
 	LaunchDate  string       `json:"launch_date"`
 	Status      string       `json:"status"`
-	MaxSol      int16        `json:"max_sol"`
+	MaxSol      int        `json:"max_sol"`
 	MaxDate     string       `json:"max_date"`
-	TotalPhotos int64        `json:"total_photos"`
+	TotalPhotos int        `json:"total_photos"`
 	AllCameras  []AllCameras `json:"cameras"`
 }
 
@@ -30,26 +30,37 @@ type AllCameras struct {
 	FullName string `json:"full_name"`
 }
 
-type Pictures struct {
-	Picture []Picture `json:"photos"`
-}
-
 type Camera struct {
-	Id       int16  `json:"id"`
+	Id       int  `json:"id"`
 	Name     string `json:"name"`
 	FullName string `json:"full_name"`
-	RoverId  int16  `json:"rover_id"`
+	RoverId  int  `json:"rover_id"`
+}
+
+type Dates struct {
+	Date []Date
+}
+
+type Date struct{
+	Sol int
+	MiniRover
+	Day     string
+	Pictures
+}
+
+type MiniRover struct {
+	Name string
+	Id   int
+}
+
+type Pictures struct {
+	Day []Picture `json:"photos"`
 }
 
 type Picture struct {
-	Rover struct {
-		Name string `json:"name"`
-		Id   int8   `json:"id"`
-	} `json:"rover"`
-	Day     string   `json:"earth_date"`
-	Camera  []Camera `json:"camera"`
+	Id     int  `json:"id"`
+	Camera  Camera `json:"camera"`
 	ImgSrc string `json:"img_src"`
-	Id     int16  `json:"id"`
 }
 
 func ReturnRoverStruct(rover string) *Rover{
@@ -77,6 +88,21 @@ func ReturnRoverPicturesStruct(rover string) *Pictures{
 	default:
 		log.Println("Rover parameter provided was not of an expected kind: ", rover)
 		return &emptyRoverPictures
+	}
+}
+
+
+func ReturnRoverDatesStruct(rover string) *Dates{
+	switch rover {
+	case "curiosity", "Curiosity":
+		return &CuriosityDates
+	case "opportunity", "Opportunity":
+		return &OpportunityDates
+	case "spirit", "Spirit":
+		return &SpiritDates
+	default:
+		log.Println("Rover parameter provided was not of an expected kind: ", rover)
+		return &emptyRoverDates
 	}
 }
 
