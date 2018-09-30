@@ -1,8 +1,40 @@
 package main
 
+import (
+	"github.com/tidwall/gjson"
+	"encoding/json"
+	"fmt"
+)
+
 func Check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
 
+func (dates *Dates) AddDate(bytes []byte) {
+	results := gjson.GetManyBytes(
+		bytes,
+		"photos.0.sol",
+		"photos.0.earth_date",
+		"photos.0.rover.name",
+		"photos.0.rover.id",
+	)
+
+	var pictures Pictures
+	json.Unmarshal(bytes, &pictures)
+
+	fmt.Println(results[0])
+
+	date := Date{
+		results[0].Num,
+		MiniRover{
+			results[2].Str,
+			results[3].Num,
+		},
+		results[1].Str,
+		pictures,
+	}
+
+	dates.Date = append(dates.Date, date)
+}

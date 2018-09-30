@@ -24,7 +24,11 @@ var apiConfig = Config{
 func ReturnLatestManifest() (io.Reader, chan bool, error) {
 	responseReceived := make(chan bool, 1)
 	// @TODO: Write a function that returns a different token if the one in use is invalid
-	apiUrl := fmt.Sprintf("%s?api_key=%s", apiConfig.url, apiConfig.token[0])
+	apiUrl := fmt.Sprintf(
+		"%s?api_key=%s",
+		apiConfig.url,
+		apiConfig.token[0],
+	)
 	response, getErr := http.Get(apiUrl)
 	responseReceived <- true
 	close(responseReceived)
@@ -37,7 +41,7 @@ func ReturnLatestManifest() (io.Reader, chan bool, error) {
 	return response.Body, responseReceived, nil
 }
 
-func ReturnLatestRoverPictures(rover string, sol int) (io.Reader, chan bool, error) {
+func ReturnLatestRoverPictures(rover string, sol float64) (io.Reader, chan bool, error) {
 	responseReceived := make(chan bool, 1)
 
 	apiUrl := fmt.Sprintf(

@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"encoding/json"
 	"io/ioutil"
-	"io"
-	"github.com/tidwall/gjson"
 )
 
 // InitializeData converts the data that exists in the JSON files in /data
@@ -28,7 +26,7 @@ func InitializeData() {
 
 	var rovers []string
 
-	didInitData := make(chan int, 3)
+	didInitData := make(chan float64, 3)
 
 	// Manifest go routine
 	go func() {
@@ -66,7 +64,7 @@ func InitializeData() {
 	for i := range didInitData {
 		fmt.Println(rovers)
 		// If the index is the last index of the dataDrawers slice, close didInitData and exit out of for loop
-		if i == len(rovers)-1 {
+		if i == float64(len(rovers))-1 {
 			close(didInitData)
 			return
 		}
@@ -76,7 +74,8 @@ func InitializeData() {
 			roverData := ReturnRoverStruct(rover)
 			datesStruct := ReturnRoverDatesStruct(rover)
 			//picturesStruct := ReturnRoverPicturesStruct(rover)
-			for x := 0; x < 2; x++ {
+			var x float64
+			for x = 0; x < 2; x++ {
 				// Make API request to grab latest rover pictures data
 				// @TODO: Figure out how to handle api error during initialization
 				sol := roverData.MaxSol - x
@@ -87,41 +86,28 @@ func InitializeData() {
 				bytes, picturesReaderErr := ioutil.ReadAll(reader)
 				Check(picturesReaderErr)
 
-				earthDate := gjson.GetBytes(bytes, "photos.0.earth_date")
-
-				var pictures Pictures
-				json.Unmarshal(bytes, &pictures)
-				fmt.Println("json.Unmarshal(bytes, pictures)", pictures)
-
-				dates := Date{
-					sol,
-					MiniRover{
-						rover,
-						roverData.Id,
-					},
-					earthDate.Str,
-					pictures,
-				}
-
-				fmt.Println(dates)
-				datesStruct.AddDate(dates)
+				//earthDate := gjson.GetBytes(bytes, "photos.0.earth_date")
+				//
+				//var pictures Pictures
+				//json.Unmarshal(bytes, pictures)
+				//fmt.Println("json.Unmarshal(bytes, pictures)", pictures)
+				//
+				//dates := Date{
+				//	sol,
+				//	MiniRover{
+				//		rover,
+				//		roverData.Id,
+				//	},
+				//	earthDate.Str,
+				//	pictures,
+				//}
+				//
+				//fmt.Println(dates)
+				datesStruct.AddDate(bytes)
 			}
 			fmt.Println(datesStruct)
 			// Unmarshall the returned data into the rovers pictures struct
 			didInitData <- i + 1
-		}(rovers[i])
+		}(rovers[int(i)])
 	}
-}
-
-func (dates *Dates) AddDate(date Date) {
-	dates.Date = append(dates.Date, date)
-}
-
-func parseReader(body io.Reader) gjson.Result {
-	bytes, err := ioutil.ReadAll(body)
-	Check(err)
-
-	result := gjson.Parse(string(bytes))
-
-	return result
 }

@@ -14,14 +14,14 @@ type Manifest struct {
 }
 
 type Rover struct {
-	Id          int        `json:"id"` // there can't be space between colon and "
+	Id          float64      `json:"id"` // there can't be space between colon and "
 	Name        string       `json:"name"`
 	LandingDate string       `json:"landing_date"`
 	LaunchDate  string       `json:"launch_date"`
 	Status      string       `json:"status"`
-	MaxSol      int        `json:"max_sol"`
+	MaxSol      float64      `json:"max_sol"`
 	MaxDate     string       `json:"max_date"`
-	TotalPhotos int        `json:"total_photos"`
+	TotalPhotos float64      `json:"total_photos"`
 	AllCameras  []AllCameras `json:"cameras"`
 }
 
@@ -31,26 +31,26 @@ type AllCameras struct {
 }
 
 type Camera struct {
-	Id       int  `json:"id"`
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	RoverId  int  `json:"rover_id"`
+	Id       float64 `json:"id"`
+	Name     string  `json:"name"`
+	FullName string  `json:"full_name"`
+	RoverId  float64 `json:"rover_id"`
 }
 
 type Dates struct {
 	Date []Date
 }
 
-type Date struct{
-	Sol int
+type Date struct {
+	Sol float64
 	MiniRover
-	Day     string
+	Day string
 	Pictures
 }
 
 type MiniRover struct {
 	Name string
-	Id   int
+	Id   float64
 }
 
 type Pictures struct {
@@ -58,12 +58,12 @@ type Pictures struct {
 }
 
 type Picture struct {
-	Id     int  `json:"id"`
-	Camera  Camera `json:"camera"`
-	ImgSrc string `json:"img_src"`
+	Id     float64 `json:"id"`
+	Camera Camera  `json:"camera"`
+	ImgSrc string  `json:"img_src"`
 }
 
-func ReturnRoverStruct(rover string) *Rover{
+func ReturnRoverStruct(rover string) *Rover {
 	switch rover {
 	case "curiosity", "Curiosity":
 		return &Curiosity
@@ -77,7 +77,7 @@ func ReturnRoverStruct(rover string) *Rover{
 	}
 }
 
-func ReturnRoverPicturesStruct(rover string) *Pictures{
+func ReturnRoverPicturesStruct(rover string) *Pictures {
 	switch rover {
 	case "curiosity", "Curiosity":
 		return &CuriosityPictures
@@ -91,8 +91,7 @@ func ReturnRoverPicturesStruct(rover string) *Pictures{
 	}
 }
 
-
-func ReturnRoverDatesStruct(rover string) *Dates{
+func ReturnRoverDatesStruct(rover string) *Dates {
 	switch rover {
 	case "curiosity", "Curiosity":
 		return &CuriosityDates
@@ -105,4 +104,3 @@ func ReturnRoverDatesStruct(rover string) *Dates{
 		return &emptyRoverDates
 	}
 }
-
