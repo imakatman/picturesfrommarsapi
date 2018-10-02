@@ -75,7 +75,7 @@ func InitializeData() {
 			datesStruct := ReturnRoverDatesStruct(rover)
 			//picturesStruct := ReturnRoverPicturesStruct(rover)
 			var x float64
-			for x = 0; x < 2; x++ {
+			for x = 0; x < 10; x++ {
 				// Make API request to grab latest rover pictures data
 				// @TODO: Figure out how to handle api error during initialization
 				sol := roverData.MaxSol - x
@@ -85,24 +85,6 @@ func InitializeData() {
 
 				bytes, picturesReaderErr := ioutil.ReadAll(reader)
 				Check(picturesReaderErr)
-
-				//earthDate := gjson.GetBytes(bytes, "photos.0.earth_date")
-				//
-				//var pictures Pictures
-				//json.Unmarshal(bytes, pictures)
-				//fmt.Println("json.Unmarshal(bytes, pictures)", pictures)
-				//
-				//dates := Date{
-				//	sol,
-				//	MiniRover{
-				//		rover,
-				//		roverData.Id,
-				//	},
-				//	earthDate.Str,
-				//	pictures,
-				//}
-				//
-				//fmt.Println(dates)
 				datesStruct.AddDate(bytes)
 			}
 			fmt.Println(datesStruct)
