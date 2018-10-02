@@ -28,9 +28,13 @@ var emptyRoverDates Dates
 
 var FileChange chan bool
 
+var now string
+
 func init() {
+	now = time.Now().Format(time.RFC850)
 	// Create a logger
-	f, err := os.Create("log.txt")
+	fname := fmt.Sprintf("%s-log.txt", now)
+	f, err := os.Create(fname)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -68,8 +72,6 @@ It prints to log.txt:
 4) IF there was an error, it will print the error
 */
 func writeToLog(c *gin.Context, msg string) {
-	now := time.Now().Format(time.RFC850)
-
 	log.Println("====================")
 	log.Println(fmt.Sprintf("%v // %s", now, msg))
 }
