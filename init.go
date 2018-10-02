@@ -1,9 +1,3 @@
-// 09-23-2018
-// @TODO #7  Figure out why curiosity, opportunity, and spirit files exist... Same data exists in manifest.json
-// might be because we need it for ReturnRoversStruct which is for
-// @TODO #7  Figure out if the files are necessary
-// we dont. instead if you want printed records of what sin the variables, print them in loggers
-
 package main
 
 import (

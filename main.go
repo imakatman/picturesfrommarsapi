@@ -1,5 +1,5 @@
-// 09-10-2018
-// @TODO #3: Create interface for manifest and rover?
+// 10-02-2018
+// @TODO #8 Set a token, so that only requests with a valid token can be made
 
 package main
 
