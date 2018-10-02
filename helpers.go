@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/tidwall/gjson"
 	"encoding/json"
-	"fmt"
 )
 
 func Check(e error) {
@@ -24,8 +23,6 @@ func (dates *Dates) AddDate(bytes []byte) {
 	var pictures Pictures
 	json.Unmarshal(bytes, &pictures)
 
-	fmt.Println(results[0])
-
 	date := Date{
 		results[0].Num,
 		MiniRover{
@@ -36,5 +33,5 @@ func (dates *Dates) AddDate(bytes []byte) {
 		pictures,
 	}
 
-	dates.Date = append(dates.Date, date)
+	dates.Days = append(dates.Days, date)
 }

@@ -41,8 +41,6 @@ func main() {
 		c.JSON(http.StatusOK, Rovers)
 	})
 
-	fmt.Println("right before rover route line")
-
 	r.GET("/rover/:rover", HandleRoverGet)
 
 	r.Run()

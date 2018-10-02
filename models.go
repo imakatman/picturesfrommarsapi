@@ -38,7 +38,7 @@ type Camera struct {
 }
 
 type Dates struct {
-	Date []Date
+	Days []Date
 }
 
 type Date struct {

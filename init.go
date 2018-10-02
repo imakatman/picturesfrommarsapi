@@ -19,11 +19,6 @@ import (
 func InitializeData() {
 	//launched := make(chan bool)
 
-	type dataDrawer struct {
-		name string
-		obj  interface{}
-	}
-
 	var rovers []string
 
 	didInitData := make(chan float64, 3)
@@ -62,15 +57,12 @@ func InitializeData() {
 	// Go routine for the rovers
 	// They run sequentially when the channel, didInitData returns a value
 	for i := range didInitData {
-		fmt.Println(rovers)
 		// If the index is the last index of the dataDrawers slice, close didInitData and exit out of for loop
 		if i == float64(len(rovers))-1 {
 			close(didInitData)
 			return
 		}
 		go func(rover string) {
-			fmt.Println("go func(rover string) {", rover)
-
 			roverData := ReturnRoverStruct(rover)
 			datesStruct := ReturnRoverDatesStruct(rover)
 			//picturesStruct := ReturnRoverPicturesStruct(rover)
@@ -87,7 +79,7 @@ func InitializeData() {
 				Check(picturesReaderErr)
 				datesStruct.AddDate(bytes)
 			}
-			fmt.Println(datesStruct)
+
 			// Unmarshall the returned data into the rovers pictures struct
 			didInitData <- i + 1
 		}(rovers[int(i)])

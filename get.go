@@ -36,8 +36,6 @@ func ReturnLatestManifest() (io.Reader, chan bool, error) {
 		return nil, responseReceived, errors.New("there was an error with the GET request")
 	}
 
-	fmt.Println(apiUrl)
-
 	return response.Body, responseReceived, nil
 }
 
@@ -51,8 +49,6 @@ func ReturnLatestRoverPictures(rover string, sol float64) (io.Reader, chan bool,
 		apiConfig.token[0],
 		sol,
 	)
-
-	fmt.Println(apiUrl)
 
 	response, err := http.Get(apiUrl)
 

@@ -5,28 +5,34 @@ import (
 	"encoding/json"
 	"net/http"
 	"io/ioutil"
+	"fmt"
 )
 
-func initVariables(rover string) (*Manifest, *Rover, *Dates) {
+var manifestData *Manifest
+var roverData *Rover
+var datesData *Dates
+
+func initVariables(rover string) {
 	// Return data that are in variables
-	manifestData := &Rovers
+	manifestData = &Rovers
 
 	// ReturnRoverPictures returns a pointer to Pictures
-	//picturesData := ReturnRoverPicturesStruct(rover)
-	roverData := ReturnRoverStruct(rover)
-	datesData := ReturnRoverDatesStruct(rover)
+	//picturesData = ReturnRoverPicturesStruct(rover)
+	roverData = ReturnRoverStruct(rover)
+	datesData = ReturnRoverDatesStruct(rover)
 
-	return manifestData, roverData, datesData
+	return
 }
 
 func HandleRoverGet(c *gin.Context) {
+	fmt.Println("func HandleRoverGet(c *gin.Context) {")
 	roverParam := c.Param("rover")
-	manifestData, roverData, datesData := initVariables(roverParam)
+	initVariables(roverParam)
 
 	if c.Query("update") == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"status": http.StatusOK,
-			"data": *datesData,
+			"data":   *datesData,
 		})
 	} else if c.Query("update") == "true" {
 		if roverData.MaxDate == c.Query("date") {
@@ -59,7 +65,7 @@ func HandleRoverGet(c *gin.Context) {
 
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,
-				"data": *datesData,
+				"data":   *datesData,
 			})
 		} else {
 			c.JSON(http.StatusOK, gin.H{
