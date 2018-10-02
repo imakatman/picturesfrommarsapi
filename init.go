@@ -7,7 +7,6 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
 	"io/ioutil"
 )
@@ -32,20 +31,16 @@ func InitializeData() {
 		Check(err)
 
 		bytes, readerErr := ioutil.ReadAll(reader)
-		fmt.Println(string(bytes))
 		Check(readerErr)
 
 		// Unmarshal the manifest bytes into Rovers variable
 		json.Unmarshal(bytes, &Rovers)
-
-		fmt.Println("Rovers", Rovers)
 
 		rovers = make([]string, 0, len(Rovers.AllRovers))
 		// Range over each slice in the AllRovers field in the Rovers struct variable
 		// Each slice of data is a Rover struct
 		for _, r := range Rovers.AllRovers {
 			rovers = append(rovers, r.Name)
-			fmt.Println(rovers, len(rovers))
 			// Set the data in the slice as the value of the empty rover variable
 			roverStruct := ReturnRoverStruct(r.Name)
 			*roverStruct = r
@@ -58,7 +53,7 @@ func InitializeData() {
 	// They run sequentially when the channel, didInitData returns a value
 	for i := range didInitData {
 		// If the index is the last index of the dataDrawers slice, close didInitData and exit out of for loop
-		if i == float64(len(rovers))-1 {
+		if i == float64(len(rovers)) {
 			close(didInitData)
 			return
 		}
@@ -67,7 +62,9 @@ func InitializeData() {
 			datesStruct := ReturnRoverDatesStruct(rover)
 			//picturesStruct := ReturnRoverPicturesStruct(rover)
 			var x float64
-			for x = 0; x < 10; x++ {
+			//tenAvailableDaysAdded := make([]bool, 10, 100)
+			var tenAvailableDaysAdded int
+			for x = 0; tenAvailableDaysAdded != 10; x++ {
 				// Make API request to grab latest rover pictures data
 				// @TODO: Figure out how to handle api error during initialization
 				sol := roverData.MaxSol - x
@@ -77,7 +74,24 @@ func InitializeData() {
 
 				bytes, picturesReaderErr := ioutil.ReadAll(reader)
 				Check(picturesReaderErr)
-				datesStruct.AddDate(bytes)
+
+				photosAvailable := datesStruct.AddDate(bytes)
+
+				if photosAvailable {
+					tenAvailableDaysAdded++
+				} else {
+					date := Date{
+						sol,
+						MiniRover{
+							roverData.Name,
+							roverData.Id,
+						},
+						"",
+						Pictures{},
+					}
+
+					datesStruct.Days = append(datesStruct.Days, date)
+				}
 			}
 
 			// Unmarshall the returned data into the rovers pictures struct

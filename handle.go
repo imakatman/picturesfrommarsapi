@@ -61,7 +61,9 @@ func HandleRoverGet(c *gin.Context) {
 			picturesBytes, picturesReaderErr := ioutil.ReadAll(picturesBody)
 			Check(picturesReaderErr)
 
-			datesData.AddDate(picturesBytes)
+			photosAvailable := datesData.AddDate(picturesBytes)
+
+			fmt.Println(photosAvailable)
 
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,
