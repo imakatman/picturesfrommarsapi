@@ -50,6 +50,8 @@ func ReturnLatestRoverPictures(rover string, sol float64) (io.Reader, chan bool,
 		sol,
 	)
 
+	fmt.Println(apiUrl)
+
 	response, err := http.Get(apiUrl)
 
 	// VERY IMPORTANT TO CLOSE CHANNEL

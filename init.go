@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"fmt"
 )
 
 // InitializeData converts the data that exists in the JSON files in /data
@@ -56,7 +57,7 @@ func InitializeData() {
 			datesStruct := ReturnRoverDatesStruct(rover)
 			//picturesStruct := ReturnRoverPicturesStruct(rover)
 			var x float64
-			//tenAvailableDaysAdded := make([]bool, 10, 100)
+
 			var tenAvailableDaysAdded int
 			for x = 0; tenAvailableDaysAdded != 10; x++ {
 				// Make API request to grab latest rover pictures data
@@ -71,6 +72,8 @@ func InitializeData() {
 
 				photosAvailable := datesStruct.AddDate(bytes)
 
+				fmt.Println(photosAvailable)
+
 				if photosAvailable {
 					tenAvailableDaysAdded++
 				} else {
@@ -84,9 +87,15 @@ func InitializeData() {
 						Pictures{},
 					}
 
-					datesStruct.Days = append(datesStruct.Days, date)
+					// In order to prepent date into datesStruct.Days, you have to append to a slice of the new Date
+					// the original Days slice.
+					dateSlice := []Date{date}
+					datesStruct.Days = append(dateSlice, datesStruct.Days...)
 				}
 			}
+
+			//fmt.Println("============InitializeData============")
+			//fmt.Println(datesStruct)
 
 			// Unmarshall the returned data into the rovers pictures struct
 			didInitData <- i + 1

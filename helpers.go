@@ -3,10 +3,12 @@ package main
 import (
 	"github.com/tidwall/gjson"
 	"encoding/json"
+	"fmt"
 )
 
 func Check(e error) {
 	if e != nil {
+		fmt.Println(e)
 		panic(e)
 	}
 }
@@ -36,8 +38,24 @@ func (dates *Dates) AddDate(bytes []byte) bool{
 			pictures,
 		}
 
-		dates.Days = append(dates.Days, date)
+		fmt.Println(len(date.Pictures.Day))
+
+		// In order to prepent date into datesStruct.Days, you have to append to a slice of the new Date
+		// the original Days slice.
+		dateSlice := []Date{date}
+		dates.Days = append(dateSlice, dates.Days...)
+
+		//fmt.Println("============AddDate============")
+		//fmt.Println(dates)
 	}
+
+	return photosAvailable
+}
+
+func (dates *Dates) FirstOutLastIn(bytes []byte) bool{
+	photosAvailable := dates.AddDate(bytes)
+
+	dates.Days = dates.Days[:8]
 
 	return photosAvailable
 }

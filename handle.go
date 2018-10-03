@@ -25,7 +25,6 @@ func initVariables(rover string) {
 }
 
 func HandleRoverGet(c *gin.Context) {
-	fmt.Println("func HandleRoverGet(c *gin.Context) {")
 	roverParam := c.Param("rover")
 	initVariables(roverParam)
 
@@ -35,7 +34,7 @@ func HandleRoverGet(c *gin.Context) {
 			"data":   *datesData,
 		})
 	} else if c.Query("update") == "true" {
-		if roverData.MaxDate == c.Query("date") {
+		//if roverData.MaxDate == c.Query("date") {
 			// Update Manifest with latest data to use when returning latest rover pictures
 			manifestBody, mResponseReceived, manErr := ReturnLatestManifest()
 			<-mResponseReceived
@@ -61,18 +60,19 @@ func HandleRoverGet(c *gin.Context) {
 			picturesBytes, picturesReaderErr := ioutil.ReadAll(picturesBody)
 			Check(picturesReaderErr)
 
-			photosAvailable := datesData.AddDate(picturesBytes)
+			photosAvailable := datesData.FirstOutLastIn(picturesBytes)
 
+			//fmt.Println("============HandleRoverGet============")
 			fmt.Println(photosAvailable)
 
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,
 				"data":   *datesData,
 			})
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"status": http.StatusNotAcceptable,
-			})
-		}
+		//} else {
+		//	c.JSON(http.StatusOK, gin.H{
+		//		"status": http.StatusNotAcceptable,
+		//	})
+		//}
 	}
 }

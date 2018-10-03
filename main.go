@@ -1,6 +1,8 @@
 // 10-02-2018
 // @TODO #8 Set a token, so that only requests with a valid token can be made
 // @TODO #9 Set up firstInLastOut function
+// 10-03-2018
+// @TODO #10 Figure out how to optimize the slices, using capacity, for each struct
 
 package main
 
@@ -13,6 +15,7 @@ import (
 	"time"
 )
 
+// Declare variables
 var Rovers Manifest
 var Curiosity Rover
 var CuriosityPictures Pictures
@@ -27,13 +30,17 @@ var emptyRover Rover
 var emptyRoverPictures Pictures
 var emptyRoverDates Dates
 
-var FileChange chan bool
-
 var now string
 
 func init() {
+	/*
+	Set a value to now variable
+	*/
 	now = time.Now().Format(time.RFC850)
-	// Create a logger
+
+	/*
+	Create a logger
+	*/
 	fname := fmt.Sprintf("%s-log.txt", now)
 	f, err := os.Create(fname)
 	if err != nil {
@@ -41,18 +48,31 @@ func init() {
 	}
 	log.SetOutput(f)
 
+	/*
+	Set gin mode to debug
+	*/
 	gin.SetMode(gin.DebugMode)
+
+	/*
+	Initialize:
+	- Rovers
+	- Curiosity
+	- CuriosityPictures
+	- CuriosityDates
+	- Opportunity
+	- OpportunityPictures
+	- OpportunityDates
+	- Spirit
+	- SpiritPictures
+	- SpiritDates
+	*/
 	InitializeData()
 }
 
 func main() {
 	r := gin.Default()
 
-	FileChange = make(chan bool)
-
 	r.GET("/manifest", func(c *gin.Context) {
-		fmt.Println("get request for manifest")
-
 		c.JSON(http.StatusOK, Rovers)
 	})
 
