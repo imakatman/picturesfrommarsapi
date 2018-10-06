@@ -1,6 +1,5 @@
 // 10-02-2018
 // @TODO #8 Set a token, so that only requests with a valid token can be made
-// @TODO #9 Set up firstInLastOut function
 // 10-03-2018
 // @TODO #10 Figure out how to optimize the slices, using capacity, for each struct
 
@@ -9,10 +8,10 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"fmt"
-	"net/http"
 	"os"
 	"log"
 	"time"
+	"net/http"
 )
 
 // Declare variables
@@ -73,10 +72,16 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/manifest", func(c *gin.Context) {
-		c.JSON(http.StatusOK, Rovers)
+		if c.Query("token") == "c?M3cwHGsvqP@JES"{
+			c.JSON(http.StatusOK, Rovers)
+		}
 	})
 
-	r.GET("/rover/:rover", HandleRoverGet)
+	r.GET("/rover/:rover", func(c *gin.Context){
+		if c.Query("token") == "c?M3cwHGsvqP@JES"{
+			HandleRoverGet(c)
+		}
+	})
 
 	r.Run()
 }
