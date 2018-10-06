@@ -8,14 +8,10 @@ import (
 	"fmt"
 )
 
-var manifestData *Manifest
 var roverData *Rover
 var datesData *Dates
 
 func initVariables(rover string) {
-	// Return data that are in variables
-	manifestData = &Rovers
-
 	// ReturnRoverPictures returns a pointer to Pictures
 	//picturesData = ReturnRoverPicturesStruct(rover)
 	roverData = ReturnRoverStruct(rover)
@@ -34,44 +30,49 @@ func HandleRoverGet(c *gin.Context) {
 			"data":   *datesData,
 		})
 	} else if c.Query("update") == "true" {
+		// Update Manifest with latest data to use when returning latest rover pictures
+		manifestBody, mResponseReceived, manErr := ReturnLatestManifest()
+		<-mResponseReceived
+		if manErr != nil {
+			c.Status(http.StatusServiceUnavailable)
+		}
+
+		manifestBytes, readerErr := ioutil.ReadAll(manifestBody)
+		Check(readerErr)
+
+		/*
+		 now that we've received latest data from nasa api
+		 re-initialize Rovers again
+		*/
+		json.Unmarshal(manifestBytes, &Rovers)
+
+		fmt.Println(c.Query("date"))
+
 		//if roverData.MaxDate == c.Query("date") {
-			// Update Manifest with latest data to use when returning latest rover pictures
-			manifestBody, mResponseReceived, manErr := ReturnLatestManifest()
-			<-mResponseReceived
-			if manErr != nil {
-				c.Status(http.StatusServiceUnavailable)
-			}
 
-			manifestBytes, readerErr := ioutil.ReadAll(manifestBody)
-			Check(readerErr)
+		picturesBody, pResponseReceived, picsApiErr := roverData.ReturnRoverPicturesFromApi(roverData.MaxSol)
+		<-pResponseReceived
+		if picsApiErr != nil {
+			c.Status(http.StatusServiceUnavailable)
+		}
 
-			/*
-			 now that we've received latest data from nasa api
-			 initialize manifestData again
-			*/
-			json.Unmarshal(manifestBytes, manifestData)
+		picturesBytes, picturesReaderErr := ioutil.ReadAll(picturesBody)
+		Check(picturesReaderErr)
 
-			picturesBody, pResponseReceived, picsApiErr := ReturnLatestRoverPictures(roverParam, roverData.MaxSol)
-			<-pResponseReceived
-			if picsApiErr != nil {
-				c.Status(http.StatusServiceUnavailable)
-			}
+		photosAvailable := datesData.FirstOutLastIn(picturesBytes)
 
-			picturesBytes, picturesReaderErr := ioutil.ReadAll(picturesBody)
-			Check(picturesReaderErr)
+		//fmt.Println("============HandleRoverGet============")
+		fmt.Println(photosAvailable)
 
-			photosAvailable := datesData.FirstOutLastIn(picturesBytes)
-
-			//fmt.Println("============HandleRoverGet============")
-			fmt.Println(photosAvailable)
-
-			c.JSON(http.StatusOK, gin.H{
-				"status": http.StatusOK,
-				"data":   *datesData,
-			})
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   *datesData,
+		})
 		//} else {
+		//	message := fmt.Sprintf("Photos for %s is not avaialable", c.Query("date"))
 		//	c.JSON(http.StatusOK, gin.H{
 		//		"status": http.StatusNotAcceptable,
+		//		"message": message,
 		//	})
 		//}
 	}

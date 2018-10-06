@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"fmt"
 )
 
 // InitializeData converts the data that exists in the JSON files in /data
@@ -32,8 +31,10 @@ func InitializeData() {
 		json.Unmarshal(bytes, &Rovers)
 
 		rovers = make([]string, 0, len(Rovers.AllRovers))
-		// Range over each slice in the AllRovers field in the Rovers struct variable
-		// Each slice of data is a Rover struct
+
+		// Initialization of Rover structs happens here
+		// ** Range over each slice in the AllRovers field in the Rovers struct variable
+		// ** Each slice of data is a Rover struct
 		for _, r := range Rovers.AllRovers {
 			rovers = append(rovers, r.Name)
 			// Set the data in the slice as the value of the empty rover variable
@@ -63,18 +64,20 @@ func InitializeData() {
 				// Make API request to grab latest rover pictures data
 				// @TODO: Figure out how to handle api error during initialization
 				sol := roverData.MaxSol - x
-				reader, responseReceived, err := ReturnLatestRoverPictures(rover, sol)
+				reader, responseReceived, err := roverData.ReturnRoverPicturesFromApi(sol)
 				<-responseReceived
 				Check(err)
 
 				bytes, picturesReaderErr := ioutil.ReadAll(reader)
 				Check(picturesReaderErr)
 
-				photosAvailable := datesStruct.AddDate(bytes)
+				date, photosAvailable := datesStruct.ParseDate(bytes)
 
-				fmt.Println(photosAvailable)
-
-				if photosAvailable {
+				// In order to prepend date into datesStruct.Days, you have to append to a slice of the new Date
+				// the original Days slice.
+				if photosAvailable{
+					dateSlice := []Date{*date}
+					datesStruct.Days = append(dateSlice, datesStruct.Days...)
 					tenAvailableDaysAdded++
 				} else {
 					date := Date{
@@ -92,6 +95,7 @@ func InitializeData() {
 					dateSlice := []Date{date}
 					datesStruct.Days = append(dateSlice, datesStruct.Days...)
 				}
+
 			}
 
 			//fmt.Println("============InitializeData============")

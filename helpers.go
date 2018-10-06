@@ -13,7 +13,7 @@ func Check(e error) {
 	}
 }
 
-func (dates *Dates) AddDate(bytes []byte) bool{
+func (dates *Dates) ParseDate(bytes []byte) (*Date, bool){
 	photosAvailable := len(gjson.GetBytes(bytes, "photos").Array()) > 0
 
 	if photosAvailable {
@@ -38,24 +38,23 @@ func (dates *Dates) AddDate(bytes []byte) bool{
 			pictures,
 		}
 
-		fmt.Println(len(date.Pictures.Day))
-
-		// In order to prepent date into datesStruct.Days, you have to append to a slice of the new Date
-		// the original Days slice.
-		dateSlice := []Date{date}
-		dates.Days = append(dateSlice, dates.Days...)
-
 		//fmt.Println("============AddDate============")
 		//fmt.Println(dates)
+
+		return &date, photosAvailable
 	}
 
-	return photosAvailable
+	return nil, photosAvailable
 }
 
 func (dates *Dates) FirstOutLastIn(bytes []byte) bool{
-	photosAvailable := dates.AddDate(bytes)
+	fmt.Println("dates", dates)
 
-	dates.Days = dates.Days[:8]
+	date, photosAvailable := dates.ParseDate(bytes)
+
+	dates.Days = append(dates.Days, *date)
+
+	dates.Days = dates.Days[1:]
 
 	return photosAvailable
 }

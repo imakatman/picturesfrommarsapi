@@ -1,0 +1,12 @@
+[GIN-debug] [WARNING] Now Gin requires Go 1.6 or later and Go 1.7 will be required soon.
+
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /manifest                 --> main.main.func1 (3 handlers)
+[GIN-debug] GET    /rover/:rover             --> main.HandleRoverGet (3 handlers)
+[GIN-debug] Environment variable PORT="3000"
+[GIN-debug] Listening and serving HTTP on :3000

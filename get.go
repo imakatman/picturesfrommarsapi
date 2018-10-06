@@ -39,14 +39,14 @@ func ReturnLatestManifest() (io.Reader, chan bool, error) {
 	return response.Body, responseReceived, nil
 }
 
-func ReturnLatestRoverPictures(rover string, sol float64) (io.Reader, chan bool, error) {
+func (rover *Rover) ReturnRoverPicturesFromApi(sol float64) (io.Reader, chan bool, error) {
 	responseReceived := make(chan bool, 1)
 
 	apiUrl := fmt.Sprintf(
 		"%s/%s/photos?api_key=%s&sol=%v",
 		apiConfig.url,
-		rover,
-		apiConfig.token[0],
+		rover.Name,
+		apiConfig.token[1],
 		sol,
 	)
 
