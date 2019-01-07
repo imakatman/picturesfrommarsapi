@@ -6,6 +6,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"fmt"
 	"os"
@@ -71,8 +72,16 @@ func init() {
 func main() {
 	r := gin.Default()
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+	}))
+
 	r.GET("/manifest", func(c *gin.Context) {
 		if c.Query("token") == "c?M3cwHGsvqP@JES"{
+			fmt.Println(Rovers)
 			c.JSON(http.StatusOK, Rovers)
 		}
 	})
@@ -83,7 +92,7 @@ func main() {
 		}
 	})
 
-	r.Run()
+	r.Run(":4000")
 }
 
 /*
